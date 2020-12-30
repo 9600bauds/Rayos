@@ -46,11 +46,13 @@ global search_Solnic = "Solnic"
 global searchType := "Default"
 
 global suppressWarnings := false
+global autoPilot := true
 global overrideMiddleClick := true
 
 global modificadoresText := "+0%" ;These two should be equivalent and are only set once in SetModificadores().
 global modificadoresMult := 1
 
+global lastPercent := 0
 global preciosGuardados := {}
 
 global PostSearchString := ""
@@ -115,6 +117,10 @@ ParseAlias(alias){
 	alias := RegExReplace(alias, "^0") ;Remove leading zero.
 	alias := RegExReplace(alias, "[ \t]+$") ;Remove trailing whitespace.	
 	
+	if(InStr(alias, "NO TRAER") or InStr(alias, "NO COMPRAR") or RegExMatch(alias, "^[-]+$")){
+		return "NEXT!"
+	}
+	
 	if(searchType == search_Exact){
 		alias := "^ " . alias . "$"
 	}
@@ -154,55 +160,54 @@ ParseAlias(alias){
 
 GetAlias(parseAfter := true, checkNota := true){
 	aliasText := ""
-	if(WinExist(ventListaArticulos))
+	if(WinExist(ventReporteArticulos))
 	{
-		if(WinExist(ventModificarArticulo))
-		{
-			WinKill, %ventModificarArticulo%
+		;ControlClick, TBTNBMP29, %ventReporteArticulos% ;silvina proofing
+		;WinWait, %ventAliasProveedor% ;silvina proofing
+		if(WinExist(ventAliasProveedor)){
+			ControlGetText, aliasText, %campoAlias_Dedicado%, %ventAliasProveedor%
+			WinKill, %ventAliasProveedor%
 		}
-		if(not WinExist(ventProveedoresHabituales))
+		if(not WinExist(ventModificarArticulo))
 		{
-			ControlClick, TBTNBMP46, %ventListaArticulos%,,,, NA ;Clickea el boton Proveedores Habituales
-			WinWait, %ventProveedoresHabituales%, , 5
-			if ErrorLevel {
-				MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
-				return
+			SetControlDelay -1
+			Loop{
+				if(A_Index = 20){
+					MsgBox, GetAlias - Could not cometh here ventModificarArticulo.
+					return
+				}
+				ControlClick, Modifica, %ventListaArticulos%,,,, NA
+				ControlClick, Modifica, %ventReporteArticulos%,,,, NA
+				ControlSend, Modifica, {Space}, %ventListaArticulos%
+				ControlSend, Modifica, {Space}, %ventReporteArticulos%
+				WinWait, %ventModificarArticulo%, , 0.5
+				if not ErrorLevel {
+					Break
+				}
 			}
 		}
-		if(not WinExist(ventModificarProveedor))
-		{
-			ControlClick, Modifica, %ventProveedoresHabituales%,,,, NA
-			;ControlSend, Modifica, {Space}, %ventProveedoresHabituales%
-			WinWait, %ventModificarProveedor%, , 5
-			if ErrorLevel
+		if(not aliasText){
+			if(not WinExist(ventProveedoresHabituales))
 			{
-				MsgBox, GetAlias - Could not summon ventModificarProveedor to this mortal coil.
-				return
+				ControlClick, Button7, %ventModificarArticulo%,,,, NA ;Clickea el boton Proveedores Habituales
+				WinWait, %ventProveedoresHabituales%, , 5
+				if ErrorLevel {
+					MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
+					return
+				}
+				ControlClick, Modifica, %ventProveedoresHabituales%,,,, NA
+				WinWait, %ventModificarProveedor%, , 5
+				if ErrorLevel
+				{
+					MsgBox, GetAlias - Could not summon ventModificarProveedor to this mortal coil.
+					return
+				}
 			}
+			ControlGetText, aliasText, %campoAlias_Habituales%, %ventModificarProveedor%
+			
+			WinKill, %ventModificarProveedor%
+			WinKill, %ventProveedoresHabituales%
 		}
-		ControlGetText, aliasText, %campoAlias_Habituales%, %ventModificarProveedor%
-		
-		WinKill, %ventModificarProveedor%
-		WinKill, %ventProveedoresHabituales%
-	}
-	else if(WinExist(ventReporteArticulos))
-	{
-		if(WinExist(ventModificarArticulo))
-		{
-			WinKill, %ventModificarArticulo%
-		}
-		if(not WinExist(ventAliasProveedor))
-		{
-			ControlClick, TBTNBMP29, %ventReporteArticulos%,,,, NA ;Clickea el boton Alias del Proveedor
-			WinWait, %ventAliasProveedor%, , 5
-			if ErrorLevel {
-				MsgBox, GetAlias - Could not special summon ventAliasProveedor.
-				return
-			}
-		}
-		ControlGetText, aliasText, %campoAlias_Dedicado%, %ventAliasProveedor%
-		
-		WinKill, %ventAliasProveedor%
 	}
 	
 	if(checkNota)
@@ -237,6 +242,11 @@ GetAlias(parseAfter := true, checkNota := true){
 ;{ Búsqueda
 Buscar(){
 	alias := GetAlias()
+	if(alias == "NEXT!"){
+		ProximoArticulo(false)
+		Buscar()
+		return
+	}
 	if(not alias){
 		return
 	}
@@ -245,6 +255,7 @@ Buscar(){
 	{
         WinActivate, %ventCalc%
         WinWait, %ventCalc%
+		
         if WinExist(ventCalc_Buscar)
 		{
             WinActivate, %ventCalc_Buscar%
@@ -256,32 +267,49 @@ Buscar(){
             Send, ^f ;Ctrl+F: Buscar
         }
         WinWait, %ventCalc_Buscar%
-        WinGet, ventBuscarID, ID, ventCalc_Buscar
+		
+        WinGet, ventBuscarID, ID, %ventCalc_Buscar%
+		curCoords := Calc_GetSelectedCoords()
+		
         SendRaw, % alias
+		Send, {Del}
 		Send, {Enter}
-        WinWaitNotActive, ahk_id %ventBuscarID%, , 5000
 		Loop{
-            if(A_Index = 20 or A_Cursor <> "Wait"){
-                Break
-            }
-            Sleep, 50
-        }
-
-		WinGet, activeID, ID, A
-		GetClientSize(activeID, winWidth, winHeight)
-        if(winHeight == 74){ ;"End of File" dialog
-            Send, {Enter}
-			WinWaitNotActive, ahk_id %activeID%, , 5000
-			WinGet, activeID, ID, A
-			GetClientSize(activeID, winWidth, winHeight)
-			if(winHeight == 80){ ;"Not Found" dialog
-				Send, {Enter}
-			    OnUnsuccessfulSearch()
-				return 0
+			Sleep, 50
+			
+			if(A_Cursor == "Wait")
+			{
+				Continue
 			}
+			
+			if(curCoords != Calc_GetSelectedCoords())
+			{
+				OnSuccessfulSearch()
+				return 1
+			}
+			
+			if(not WinActive(ventBuscarID))
+			{
+				WinGet, activeID, ID, A
+				GetClientSize(activeID, winWidth, winHeight)
+				if(winHeight == 74){ ;"End of File" dialog
+					Send, {Enter}
+					Continue
+				}
+				if(winHeight == 80){ ;"Not Found" dialog
+					Send, {Enter}
+					OnUnsuccessfulSearch()
+					return 0
+				}			
+			}
+			
+            if(A_Index = 20){
+				OnUnsuccessfulSearch()
+				return 0
+            }
         }
-		OnSuccessfulSearch()
-		return 1
+		OnUnsuccessfulSearch()
+		return 0
     }
 	else if WinExist(ventAdobeReader_Buscar)
 	{ ;TODO TEST
@@ -340,11 +368,22 @@ OnUnsuccessfulSearch(){
 OnSuccessfulSearch(){
     WinActivate, %ventCalc_Main%
 	
-	if (SubStr(PostSearchString,0,1) == "c") {
+	if(SubStr(PostSearchString,0,1) == "c"){
 		trimmed := SubStr(PostSearchString,1,StrLen(PostSearchString)-1)		
 		Send, %trimmed%
 		Send {Ctrl Down}c{Ctrl Up}
-	} else {
+		WinWait, A
+		if(autoPilot) ;living on a edge baby
+		{
+			success := PastePrice()
+			if(success and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
+			{
+				Send, {Launch_Mail}
+			}
+		}
+
+	}
+	else{
 		Send, %PostSearchString%
 	}
 }
@@ -456,6 +495,8 @@ PastePrice(newPrice := 0){
 	ControlSend, %campoPrecioCosto%, %newPrice%, %ventModificarArticulo%
 	
 	LogPriceChange(itemID, oldPrice, newPrice, modificadoresText, modificadorAdicionalString, precioAdicionalString)
+	lastPercent := percent
+	return true
 }
 ;}
 
@@ -704,6 +745,29 @@ WindowUnderMouse()
 	WinGetTitle, Title, ahk_id %underCursor%
 	Return, Title
 }
+
+Calc_GetSelectedCoords()
+{
+	oSM := ComObjCreate("com.sun.star.ServiceManager")			; This line is mandatory with AHK for OOo API
+	oDesk := oSM.createInstance("com.sun.star.frame.Desktop")	; Create the first and most important service
+	Array := ComObjArray(VT_VARIANT:=12, 2)
+	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
+	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)  
+	oCell := oDoc.getCurrentSelection
+	Col:=oCell.CellAddress.Column
+	Row:=oCell.CellAddress.Row 
+	FinalStr := Col "-" Row
+	Return FinalStr
+}
+
+;Used for OOo API.
+MakePropertyValue(poSM, cName, uValue)
+{	oPropertyValue			:= Object()
+	oPropertyValue 			:= poSM.Bridge_GetStruct("com.sun.star.beans.PropertyValue")
+	oPropertyValue.Name		:= cName
+	oPropertyValue.Value	:= uValue
+	Return oPropertyValue
+}
 ;}
 
 ;{ AUTOEXEC
@@ -827,6 +891,10 @@ Else
 }
 return
 #If
+
+^Esc::
+Pause
+return
 
 Exit:
 ExitApp
