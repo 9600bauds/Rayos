@@ -38,6 +38,7 @@ global search_Exact = "Exact"
 global search_Start = "Match Start"
 global search_End = "Match End"
 global search_RemoveLastWord = "Remove Last Word"
+global search_RemoveLetters = "Remove Letters"
 global search_LongestNumber = "Longest Number"
 global search_Fabrimport = "Fabrimport"
 global search_Faroluz = "Faroluz"
@@ -132,6 +133,9 @@ ParseAlias(alias){
 	}
 	else if(searchType == search_RemoveLastWord){
 		alias := RegExReplace(alias, " \w+$", "")
+	}
+	else if(searchType == search_RemoveLetters){
+		alias := RegExReplace(alias, "[A-Za-z]", "")
 	}
 	else if(searchType == search_LongestNumber){
 		longestMatch := ""
@@ -612,6 +616,10 @@ Menu, searchTypeMenu, Add, %search_RemoveLastWord%, setSearchRemoveLastWord, Rad
 setSearchRemoveLastWord(){
     setSearchType(search_RemoveLastWord)
 }
+Menu, searchTypeMenu, Add, %search_RemoveLetters%, setSearchRemoveLetters, Radio
+setSearchRemoveLetters(){
+    setSearchType(search_RemoveLetters)
+}
 Menu, searchTypeMenu, Add, %search_LongestNumber%, setSearchLongestNumber, Radio
 setSearchLongestNumber(){
     setSearchType(search_LongestNumber)
@@ -643,6 +651,7 @@ setSearchType(type, initial := false){
     Menu, searchTypeMenu, Uncheck, %search_Start%
     Menu, searchTypeMenu, Uncheck, %search_End%
     Menu, searchTypeMenu, Uncheck, %search_RemoveLastWord%
+	Menu, searchTypeMenu, Uncheck, %search_RemoveLetters%
     Menu, searchTypeMenu, Uncheck, %search_LongestNumber%
     Menu, searchTypeMenu, Uncheck, %search_Fabrimport%
     Menu, searchTypeMenu, Uncheck, %search_Faroluz%
