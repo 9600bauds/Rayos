@@ -183,9 +183,7 @@ GetAlias(parseAfter := true, checkNota := true){
 					MsgBox, GetAlias - Could not cometh here ventModificarArticulo.
 					return
 				}
-				ControlClick, Modifica, %ventListaArticulos%,,,, NA
 				ControlClick, Modifica, %ventReporteArticulos%,,,, NA
-				ControlSend, Modifica, {Space}, %ventListaArticulos%
 				ControlSend, Modifica, {Space}, %ventReporteArticulos%
 				WinWait, %ventModificarArticulo%, , 0.5
 				if not ErrorLevel {
@@ -221,9 +219,7 @@ GetAlias(parseAfter := true, checkNota := true){
 	{
 		if(not WinExist(ventModificarArticulo))
 		{
-			ControlClick, Modifica, %ventListaArticulos%,,,, NA
 			ControlClick, Modifica, %ventReporteArticulos%,,,, NA
-			ControlSend, Modifica, {Space}, %ventListaArticulos%
 			ControlSend, Modifica, {Space}, %ventReporteArticulos%
 			WinWait, %ventModificarArticulo%, , 5
 			if ErrorLevel {
@@ -375,17 +371,19 @@ OnUnsuccessfulSearch(){
 OnSuccessfulSearch(){
     WinActivate, %ventCalc_Main%
 	
-	if(SubStr(PostSearchString,0,1) == "c"){
-		trimmed := SubStr(PostSearchString,1,StrLen(PostSearchString)-1)		
-		Send, %trimmed%
-		Send {Ctrl Down}c{Ctrl Up}
-		WinWait, A
-		if(autoPilot) ;living on a edge baby
-		{
-			success := PastePrice()
-			if(success and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
+	for index, match in AllRegexMatches(PostSearchString, "{[^{}]+}")
+	{
+		if(match == "{Seek}"){
+			ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
+			oldPrice := TextPrice2Float(oldPrice)
+			Clipboard := Calc_SeekInRow(oldPrice)
+		}
+		else if(match == "{Paste}"){
+			WinWait, A
+			Send {Ctrl Down}c{Ctrl Up}
+			WinWait, A
+			if(autoPilot) ;living on a edge baby
 			{
-				Send, {Launch_Mail}
 				success := PastePrice()
 				if(success and (not shouldStop) and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
 				{
@@ -399,11 +397,12 @@ OnSuccessfulSearch(){
 				}
 			}
 		}
+		else{
+			Send, % match
+		}
+		
+	}
 
-	}
-	else{
-		Send, %PostSearchString%
-	}
 }
 ;}
  
@@ -424,36 +423,9 @@ TextPrice2Float(price){
 	return price
 }
 
-PastePrice(newPrice := 0){
-	if(not WinExist(ventModificarArticulo))
-	{
-		ControlSend, Modifica, {Space}, %ventListaArticulos%
-		ControlSend, Modifica, {Space}, %ventReporteArticulos%
-		WinWait, %ventModificarArticulo%, , 5
-		if ErrorLevel {
-			MsgBox, PastePrice - Could not bring forth ventModificarArticulo.
-			return
-		}
-	}
-	
-	ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
-	oldPrice := TextPrice2Float(oldPrice)
-	ControlGetText, itemID, %campoCodigo%, %ventModificarArticulo%
-	
-	if(newPrice == 0)
-	{
-		newPrice := Clipboard
-	}
-	newPrice := TextPrice2Float(newPrice)
-	if(not IsNum(newPrice))
-	{
-        MsgBox, Precio inválido. (%newPrice%)
-        return
-    }
-
+ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdicionalString := "", ByRef precioAdicionalString := ""){
 	ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
 
-	precioAdicionalString := ""
 	RegExMatch(notaAdicional, ".*Incluye (.*)$", preciosAdicionales)
 	if(preciosAdicionales1)
 	{
@@ -494,6 +466,37 @@ PastePrice(newPrice := 0){
 	if(newPrice * 500 < oldPrice){ ;FUCK THOUSANDS SEPARATORS
         newPrice := newPrice * 1000
     }
+}
+
+PastePrice(newPrice := 0){
+	if(not WinExist(ventModificarArticulo))
+	{
+		ControlSend, Modifica, {Space}, %ventReporteArticulos%
+		WinWait, %ventModificarArticulo%, , 5
+		if ErrorLevel {
+			MsgBox, PastePrice - Could not bring forth ventModificarArticulo.
+			return
+		}
+	}
+	
+	ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
+	oldPrice := TextPrice2Float(oldPrice)
+	ControlGetText, itemID, %campoCodigo%, %ventModificarArticulo%
+	
+	if(newPrice == 0)
+	{
+		newPrice := Clipboard
+	}
+	newPrice := TextPrice2Float(newPrice)
+	if(not IsNum(newPrice))
+	{
+        MsgBox, Precio inválido. (%newPrice%)
+        return
+    }
+	
+	modificadorAdicionalString := ""
+	precioAdicionalString := ""
+	ApplyPriceMultipliers(newPrice, oldPrice, modificadorAdicionalString, precioAdicionalString)
 
 	percent := (100*newPrice/oldPrice)-100
     percent := Round(percent, 1)
@@ -527,13 +530,10 @@ ProximoArticulo(openAfter := true)
 	}
 	ControlSend, Sí, {Enter}, Atención
 	ControlSend, Sí, {Enter}, Atención
-	ControlSend, %campoListado%, {Down}, %ventListaArticulos%
 	ControlSend, %campoListado%, {Down}, %ventReporteArticulos%
 	if(openAfter)
 	{
-		ControlClick, Modifica, %ventListaArticulos%,,,, NA
 		ControlClick, Modifica, %ventReporteArticulos%,,,, NA
-		;ControlSend, Modifica, {Space}, %ventListaArticulos% ;Clickea el boton Modifica
 	}
 }
 
@@ -543,13 +543,10 @@ AnteriorArticulo(openAfter := true)
 	{
 		WinKill, %ventModificarArticulo%
 	}
-	ControlSend, %campoListado%, {Up}, %ventListaArticulos%
 	ControlSend, %campoListado%, {Up}, %ventReporteArticulos%
 	if(openAfter)
 	{
-		ControlClick, Modifica, %ventListaArticulos%,,,, NA
 		ControlClick, Modifica, %ventReporteArticulos%,,,, NA
-		;ControlSend, Modifica, {Space}, %ventListaArticulos% ;Clickea el boton Modifica
 	}
 }
 ;}
@@ -584,10 +581,10 @@ SetPostSearchString(searchStringInput := "", displayMessage := true)
 {
 	if(searchStringInput == "")
 	{
-		explanation := "Write out a set of instructions to send after a successful search.`r`rEach instruction must be between curly brackets, such as: {Right}`rAdd a number after your instruction to make it repeat that many times, for example: {Right 2}.`rSyntax is the same as AutoHotKey's Send command.`rFinish the string with a lowercase c outside brackets to send CTRL+C after. Example: {Right 2}c"
+		explanation := "Write out a set of instructions to send after a successful search.`r`rEach instruction must be between curly brackets, such as: {Right}`rAdd a number after your instruction to make it repeat that many times, for example: {Right 2}.`rSyntax is the same as AutoHotKey's Send command.`rSpecial commands: {Seek} and {Paste}."
 		if(PostSearchString == "")
 		{
-			defaultInput := "{Right 2}"
+			defaultInput := "{Seek}{Paste}"
 		}
 		else
 		{
@@ -776,11 +773,85 @@ Calc_GetSelectedCoords()
 	Array := ComObjArray(VT_VARIANT:=12, 2)
 	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
 	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)  
-	oCell := oDoc.getCurrentSelection
+	oSel := oDoc.getCurrentSelection
+	oCell := ""
+	if(oSel.getImplementationName == "ScCellObj"){
+		oCell := oSel
+	}
+	else if(oSel.getImplementationName == "ScCellRangeObj"){
+		oCell := oSel.getCellByPosition(0,0)
+	}
+	else if(oSel.getImplementationName == "ScCellRangesObj"){ ;SSSSSSSSSSSSSS
+		oCell := oSel.getByIndex(0).getCellByPosition(0,0)
+	}
+	else{
+		MsgBox % oSel.getImplementationName
+		return 
+	}
 	Col:=oCell.CellAddress.Column
 	Row:=oCell.CellAddress.Row 
 	FinalStr := Col "-" Row
 	Return FinalStr
+}
+
+Calc_SeekInRow(theVal)
+{
+	oSM := ComObjCreate("com.sun.star.ServiceManager")			; This line is mandatory with AHK for OOo API
+	oDesk := oSM.createInstance("com.sun.star.frame.Desktop")	; Create the first and most important service	
+	Array := ComObjArray(VT_VARIANT:=12, 2)
+	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
+	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)
+
+	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deseleccionar
+
+	oSel := oDoc.getCurrentSelection
+	oCell := ""
+	if(oSel.getImplementationName == "ScCellObj"){
+		oCell := oSel
+	}
+	else if(oSel.getImplementationName == "ScCellRangeObj"){
+		oCell := oSel.getCellByPosition(0,0)
+	}
+	else if(oSel.getImplementationName == "ScCellRangesObj"){ ;SSSSSSSSSSSSSS
+		oCell := oSel.getByIndex(0).getCellByPosition(0,0)
+	}
+	else{
+		MsgBox % oSel.getImplementationName
+		return 
+	}
+	
+	Row := oCell.CellAddress.Row
+	
+	oHojaActiva := oDoc.getCurrentController().getActiveSheet()
+	oRango := oHojaActiva.getCellRangeByPosition(0,Row,20,Row)
+
+	mDatos := oRango.getDataArray()
+	
+	closestNumbr := 0
+	closestIndex := 0
+	for key in mDatos[0]
+	{
+		if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*"))
+		{
+			continue
+		}
+		numbr := TextPrice2Float(key)
+		if(IsNum(numbr))
+		{
+			ApplyPriceMultipliers(numbr)
+			if(abs(theVal-numbr) < abs(theVal-closestNumbr))
+			{
+				closestNumbr := numbr
+				closestIndex := A_Index-1 ;Unfun fact: Arrays start at 1 in AHK.
+			}
+		}
+	}
+	oCelda := oHojaActiva.getCellByPosition(closestIndex,Row)
+	oDoc.getCurrentController().Select(oCelda)
+	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deseleccionar
+	
+	return closestNumbr
+
 }
 
 ;Used for OOo API.
@@ -841,7 +912,8 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 
 ;{ Keybinds
 Launch_Media::
-;Msgbox, Testing...
+;Msgbox, Testing...	
+WinRestore, LUPA - Gest
 return
 
 ^Launch_Media::
