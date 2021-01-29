@@ -57,6 +57,9 @@ global lastPercent := 0
 global preciosGuardados := {}
 
 global PostSearchString := ""
+
+global working := false
+global shouldStop := false
 ;}
 
 ;{ Ventana Lista Artículos
@@ -383,6 +386,17 @@ OnSuccessfulSearch(){
 			if(success and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
 			{
 				Send, {Launch_Mail}
+				success := PastePrice()
+				if(success and (not shouldStop) and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
+				{
+					working := true
+					Send, {Launch_Mail}
+				}
+				else
+				{
+					working := false
+					shouldStop := false
+				}
 			}
 		}
 
@@ -901,9 +915,11 @@ Else
 return
 #If
 
-^Esc::
-Pause
+#If working
+Esc::
+	shouldStop := true
 return
+#If
 
 Exit:
 ExitApp
