@@ -1074,7 +1074,7 @@ return
 ^Browser_Home::
 return
 
-#If overrideMiddleClick and not InStr(WindowUnderMouse(), "Firefox")
+#If overrideMiddleClick and InStr(WindowUnderMouse(), "Modif")
 MButton::
 If(InStr(WindowUnderMouse(), ventReporteArticulos))
 {
