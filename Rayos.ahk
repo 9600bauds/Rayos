@@ -40,6 +40,7 @@ global search_End = "Match End"
 global search_RemoveLastWord = "Remove Last Word"
 global search_RemoveLetters = "Remove Letters"
 global search_LongestNumber = "Longest Number"
+global search_RemoveZeroes = "Remove ALL Trailing Zeroes"
 global search_Fabrimport = "Fabrimport"
 global search_Faroluz = "Faroluz"
 global search_Ferrolux = "Ferrolux"
@@ -148,6 +149,9 @@ ParseAlias(alias){
 			}
 		}
 		alias := longestMatch
+	}
+	else if(searchType == search_removeZeroes){
+		alias := RegExReplace(alias, "^[0]+", "")
 	}
 	else if(searchType == search_Fabrimport){
 		alias := "[^0-9]" . alias . "$"
@@ -635,6 +639,10 @@ Menu, searchTypeMenu, Add, %search_LongestNumber%, setSearchLongestNumber, Radio
 setSearchLongestNumber(){
     setSearchType(search_LongestNumber)
 }
+Menu, searchTypeMenu, Add, %search_removeZeroes%, setSearchRemoveZeroes, Radio
+setSearchRemoveZeroes(){
+    setSearchType(search_removeZeroes)
+}
 Menu, searchTypeMenu, Add, %search_Fabrimport%, setSearchFabrimport, Radio
 setSearchFabrimport(){
     setSearchType(search_Fabrimport)
@@ -664,6 +672,7 @@ setSearchType(type, initial := false){
     Menu, searchTypeMenu, Uncheck, %search_RemoveLastWord%
 	Menu, searchTypeMenu, Uncheck, %search_RemoveLetters%
     Menu, searchTypeMenu, Uncheck, %search_LongestNumber%
+	Menu, searchTypeMenu, Uncheck, %search_RemoveZeroes%
     Menu, searchTypeMenu, Uncheck, %search_Fabrimport%
     Menu, searchTypeMenu, Uncheck, %search_Faroluz%
     Menu, searchTypeMenu, Uncheck, %search_Ferrolux%
@@ -705,6 +714,14 @@ Menu, Tray, Add, Exit, Exit
 ;}
 
 ;{ Misc
+shouldStop(){
+	if(shouldStop){
+		working := false
+		shouldStop := false
+		return 1
+	}
+}
+
 AllRegexMatches(haystack, needle){
     Pos := 1
     Matches := []
@@ -916,7 +933,7 @@ Launch_Media::
 WinRestore, LUPA - Gest
 return
 
-^Launch_Media::
+!^Launch_Media::
 ListLines 
 return
 
