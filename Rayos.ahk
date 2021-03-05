@@ -48,7 +48,7 @@ global search_Solnic = "Solnic"
 global searchType := "Default"
 
 global suppressWarnings := false
-global autoPilot := true
+global autoPilot := false
 global overrideMiddleClick := true
 
 global modificadoresText := "+0%" ;These two should be equivalent and are only set once in SetModificadores().
@@ -170,6 +170,11 @@ ParseAlias(alias){
 }
 
 GetAlias(parseAfter := true, checkNota := true){
+	if(shouldStop())
+	{
+		return
+	}
+		
 	aliasText := ""
 	if(WinExist(ventReporteArticulos))
 	{
@@ -248,6 +253,11 @@ GetAlias(parseAfter := true, checkNota := true){
 
 ;{ Búsqueda
 Buscar(){
+	if(shouldStop())
+	{
+		return
+	}
+		
 	alias := GetAlias()
 	if(alias == "NEXT!"){
 		ProximoArticulo(false)
@@ -371,8 +381,24 @@ Buscar(){
 }
 
 OnUnsuccessfulSearch(){
+	if(autoPilot) ;living on a edge baby
+	{
+		if(shouldStop){
+			working := false
+			shouldStop := false
+		}
+		else{
+			working := true
+			ProximoArticulo(false)
+			Buscar()
+		}
+	}
 }
 OnSuccessfulSearch(){
+	if(shouldStop())
+	{
+		return
+	}
     WinActivate, %ventCalc_Main%
 	
 	for index, match in AllRegexMatches(PostSearchString, "{[^{}]+}")
@@ -386,19 +412,16 @@ OnSuccessfulSearch(){
 			WinWait, A
 			Send {Ctrl Down}c{Ctrl Up}
 			WinWait, A
-			if(autoPilot) ;living on a edge baby
+			success := PastePrice()
+			if(success and (not shouldStop) and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
 			{
-				success := PastePrice()
-				if(success and (not shouldStop) and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
-				{
-					working := true
-					Send, {Launch_Mail}
-				}
-				else
-				{
-					working := false
-					shouldStop := false
-				}
+				working := true
+				Send, {Launch_Mail}
+			}
+			else
+			{
+				working := false
+				shouldStop := false
 			}
 		}
 		else{
@@ -473,6 +496,11 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 }
 
 PastePrice(newPrice := 0){
+	if(shouldStop())
+	{
+		return
+	}
+	
 	if(not WinExist(ventModificarArticulo))
 	{
 		ControlSend, Modifica, {Space}, %ventReporteArticulos%
@@ -528,6 +556,11 @@ PastePrice(newPrice := 0){
 ;{ Navegación
 ProximoArticulo(openAfter := true)
 {
+	if(shouldStop())
+	{
+		return
+	}
+		
 	if(WinExist(ventModificarArticulo))
 	{
 		WinKill, %ventModificarArticulo%
@@ -543,6 +576,11 @@ ProximoArticulo(openAfter := true)
 
 AnteriorArticulo(openAfter := true)
 {
+	if(shouldStop())
+	{
+		return
+	}
+		
 	if(WinExist(ventModificarArticulo))
 	{
 		WinKill, %ventModificarArticulo%
@@ -706,6 +744,18 @@ toggleSuppressWarnings(){
     else{
         Menu, Tray, Check, Suppress Warnings
         suppressWarnings := true
+    }
+}
+
+Menu, Tray, Add, Skip on Unsuccessful Search, toggleAutoPilot
+toggleAutoPilot(){
+    if(autoPilot == true){
+        Menu, Tray, Uncheck, Skip on Unsuccessful Search
+        autoPilot := false
+    }
+    else{
+        Menu, Tray, Check, Skip on Unsuccessful Search
+        autoPilot := true
     }
 }
 
