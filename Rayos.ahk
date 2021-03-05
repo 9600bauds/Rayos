@@ -797,6 +797,37 @@ IsNum(str){ ;Fuck AHK.
 	return false
 }
 
+GetClassName(hwnd)
+{ ; returns HWND's class name without its instance number, e.g. "Edit" or "SysListView32"
+	VarSetCapacity( buff, 256, 0 )
+	DllCall("GetClassName", "uint", hwnd, "str", buff, "int", 255 )
+	return buff
+}
+
+DeepCopyControl(controlName, windowName1, windowName2)
+{
+	ControlGet, controlHwnd, Hwnd,,%controlName%,%windowName1%
+	controlType := GetClassName(controlHwnd)
+	if(controlType == "Edit")
+	{
+		ControlGetText, controlText, %controlName%, %windowName1%
+		ControlFocus, %controlName%, %windowName2%
+		ControlSetText, %controlName%,, %windowName2%
+		SendRaw, % controlText
+		Sleep, 1000
+		;Send, {Enter}
+		
+		;Control, EditPaste, %controlText%, %controlName%, %windowName2%
+		;ControlSend, %controlName%, %controlText%, %windowName2%
+		;ControlSend, %controlName%, %controlText%, %windowName2%
+	}
+	if(controlType == "ComboBox")
+	{
+		ControlGet, controlText, Choice, , %controlName%, %windowName1%
+		Control, ChooseString, %controlText%, %controlName%, %windowName2%
+	}
+}
+
 WaitControlExist(controlName, windowName, tries := 100, retryTimer := 50){
 	Loop
 	{
@@ -1022,6 +1053,14 @@ ControlSend, Sí, {Enter}, Atención
 ControlSend, Sí, {Enter}, Atención
 ProximoArticulo(false)
 Buscar()
+return
+
+!^Launch_Mail::
+camposAClonar := ["Edit3", "Edit6", "Edit7", "ComboBox1", "ComboBox5", "Edit9", "Edit12", "Edit15", "ComboBox2", "ComboBox3", "ComboBox4"]
+for i, elCampo in camposAClonar
+{
+	DeepCopyControl(elCampo, "Modifica", "Nuevo")
+}
 return
 
 Browser_Search::
