@@ -422,7 +422,20 @@ OnSuccessfulSearch(){
 		if(match == "{Seek}"){
 			ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
 			oldPrice := TextPrice2Float(oldPrice)
-			Clipboard := Calc_SeekInRow(oldPrice)
+			ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+			
+			RegExMatch(notaAdicional, "im).*Seek:[ ]+(.*)$", seekOverride)
+			if(seekOverride1)
+			{
+				seekOverride := "{" . seekOverride1 . "}"
+				Send, % seekOverride
+				Sleep, 100
+				Send {Ctrl Down}c{Ctrl Up}
+			}
+			else
+			{
+				Clipboard := Calc_SeekInRow(oldPrice)
+			}
 		}
 		else if(match == "{Paste}"){
 			WinWait, A
