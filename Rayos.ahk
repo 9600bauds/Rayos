@@ -251,7 +251,7 @@ GetAlias(parseAfter := true, checkNota := true){
 			}
 		}
 		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
-		RegExMatch(notaAdicional, "i).*[Alias completo|Alias|Simil]: (.*)$", aliasReplacement)
+		RegExMatch(notaAdicional, "im).*[Alias completo|Alias|Simil]: (.*)$", aliasReplacement)
 		if(aliasReplacement1)
 		{
 			aliasText := aliasReplacement1
@@ -467,7 +467,7 @@ TextPrice2Float(price){
 ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdicionalString := "", ByRef precioAdicionalString := ""){
 	ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
 
-	RegExMatch(notaAdicional, "i).*Incluye (.*)$", preciosAdicionales)
+	RegExMatch(notaAdicional, "im).*Incluye (.*)$", preciosAdicionales)
 	if(preciosAdicionales1)
 	{
 		if(not preciosGuardados[preciosAdicionales1])
@@ -489,13 +489,13 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 	}
 	
 	modificadorAdicionalString := ""
-    RegExMatch(notaAdicional, "i).*Precio de lista \*([0-9.]+)", extraMults)
+    RegExMatch(notaAdicional, "im).*Precio de lista \*([0-9.]+)$", extraMults)
     if(extraMults1)
 	{
         modificadorAdicionalString := " *" . extraMults1
         newPrice := newPrice * extraMults1
     }
-    RegExMatch(notaAdicional, "i).*Precio de lista \/([0-9.]+)", extraDivisions)
+    RegExMatch(notaAdicional, "im).*Precio de lista \/([0-9.]+)$", extraDivisions)
     if(extraDivisions1)
 	{
 		modificadorAdicionalString := " /" . extraDivisions1
