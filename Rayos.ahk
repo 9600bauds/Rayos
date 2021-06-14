@@ -1098,13 +1098,13 @@ return
 ^Browser_Home::
 return
 
-#If overrideMiddleClick and InStr(WindowUnderMouse(), "Modif")
+#If overrideMiddleClick
 MButton::
 If(InStr(WindowUnderMouse(), ventReporteArticulos))
 {
 	WinKill, %ventModificarArticulo%
 }
-Else
+Else If(InStr(WindowUnderMouse(), ventAdobeReader) or InStr(WindowUnderMouse(), ventCalc) or InStr(WindowUnderMouse(), ventWord))
 {
 	Click, 2
 	Sleep, 300
@@ -1113,6 +1113,10 @@ Else
 	Sleep, 100
 	WinWait, A
 	Send {Browser_Home}
+}
+Else
+{
+	Send {MButton}
 }
 return
 #If
