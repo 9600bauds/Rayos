@@ -487,7 +487,12 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 			}
 		}
 		precioAdicionalString := " +" . preciosGuardados[preciosAdicionales1]
-		newPrice := newPrice + preciosGuardados[preciosAdicionales1]
+		precioAdicional := preciosGuardados[preciosAdicionales1]
+		if(newPrice * 10 < precioAdicional){ ;FUCK THOUSANDS SEPARATORS
+			precioAdicional := precioAdicional / 1000
+		}
+		precioAdicionalString := " +" . precioAdicional
+		newPrice := newPrice + precioAdicional
 	}
 	
 	modificadorAdicionalString := ""
@@ -962,8 +967,8 @@ Calc_SeekInRow(theVal)
 		numbr := TextPrice2Float(key)
 		if(IsNum(numbr))
 		{
-			ApplyPriceMultipliers(numbr)
-			if(abs(theVal-numbr) < abs(theVal-closestNumbr))
+			ApplyPriceMultipliers(numbr, theVal)
+			if(abs(theVal-numbr) <= abs(theVal-closestNumbr))
 			{
 				closestNumbr := numbr
 				closestIndex := A_Index-1 ;Unfun fact: Arrays start at 1 in AHK.
