@@ -499,7 +499,6 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 				preciosGuardados[preciosAdicionales1] := tempInput
 			}
 		}
-		precioAdicionalString := " +" . preciosGuardados[preciosAdicionales1]
 		precioAdicional := preciosGuardados[preciosAdicionales1]
 		if(newPrice * 10 < precioAdicional){ ;FUCK THOUSANDS SEPARATORS
 			precioAdicional := precioAdicional / 1000
