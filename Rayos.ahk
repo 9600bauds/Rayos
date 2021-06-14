@@ -37,9 +37,11 @@ global search_Default = "Default"
 global search_Exact = "Exact"
 global search_Start = "Match Start"
 global search_End = "Match End"
+global search_WordBoundaries = "Match Word Boundaries"
 global search_RemoveLastWord = "Remove Last Word"
 global search_RemoveLetters = "Remove Letters"
 global search_LongestNumber = "Longest Number"
+global search_LongestWord = "Longest Word"
 global search_RemoveZeroes = "Remove ALL Trailing Zeroes"
 global search_Fabrimport = "Fabrimport"
 global search_Faroluz = "Faroluz"
@@ -135,6 +137,9 @@ ParseAlias(alias){
 	else if(searchType == search_End){
 		alias := alias . "$"
 	}
+	else if(searchType == search_WordBoundaries){
+		alias := "\b" . alias . "\b"
+	}
 	else if(searchType == search_RemoveLastWord){
 		alias := RegExReplace(alias, " \w+$", "")
 	}
@@ -149,6 +154,15 @@ ParseAlias(alias){
 			}
 		}
 		alias := longestMatch
+	}
+	else if(searchType == search_longestWord){
+		longestMatch := ""
+		for index, match in AllRegexMatches(alias, "[\w]+"){
+			if(StrLen(match) > StrLen(longestMatch)){
+				longestMatch := match
+			}
+		}
+		alias := "\b" . longestMatch . "\b"
 	}
 	else if(searchType == search_removeZeroes){
 		alias := RegExReplace(alias, "^[0]+", "")
@@ -665,6 +679,10 @@ Menu, searchTypeMenu, Add, %search_End%, setSearchEnd, Radio
 setSearchEnd(){
     setSearchType(search_End)
 }
+Menu, searchTypeMenu, Add, %search_wordBoundaries%, setSearchWordBoundaries, Radio
+setSearchWordBoundaries(){
+    setSearchType(search_wordBoundaries)
+}
 Menu, searchTypeMenu, Add, %search_RemoveLastWord%, setSearchRemoveLastWord, Radio
 setSearchRemoveLastWord(){
     setSearchType(search_RemoveLastWord)
@@ -676,6 +694,10 @@ setSearchRemoveLetters(){
 Menu, searchTypeMenu, Add, %search_LongestNumber%, setSearchLongestNumber, Radio
 setSearchLongestNumber(){
     setSearchType(search_LongestNumber)
+}
+Menu, searchTypeMenu, Add, %search_LongestWord%, setSearchLongestWord, Radio
+setSearchLongestWord(){
+    setSearchType(search_LongestWord)
 }
 Menu, searchTypeMenu, Add, %search_removeZeroes%, setSearchRemoveZeroes, Radio
 setSearchRemoveZeroes(){
@@ -707,9 +729,11 @@ setSearchType(type, initial := false){
     Menu, searchTypeMenu, Uncheck, %search_Exact%
     Menu, searchTypeMenu, Uncheck, %search_Start%
     Menu, searchTypeMenu, Uncheck, %search_End%
+	Menu, searchTypeMenu, Uncheck, %search_WordBoundaries%
     Menu, searchTypeMenu, Uncheck, %search_RemoveLastWord%
 	Menu, searchTypeMenu, Uncheck, %search_RemoveLetters%
     Menu, searchTypeMenu, Uncheck, %search_LongestNumber%
+	Menu, searchTypeMenu, Uncheck, %search_LongestWord%
 	Menu, searchTypeMenu, Uncheck, %search_RemoveZeroes%
     Menu, searchTypeMenu, Uncheck, %search_Fabrimport%
     Menu, searchTypeMenu, Uncheck, %search_Faroluz%
@@ -1098,6 +1122,9 @@ Esc::
 	shouldStop := true
 return
 #If
+Pause::
+	shouldStop := true
+return
 
 Exit:
 ExitApp
