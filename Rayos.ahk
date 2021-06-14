@@ -10,6 +10,7 @@ global ventModificarArticulo := "Modificación : "
 global campoCodigo := "Edit1"
 global campoPrecioCosto := "Edit8"
 global campoNota := "Edit18"
+global campoMargen1 := "Edit9"
 
 global ventModificarProveedor := "Modificación"
 global ventProveedoresHabituales := "Proveedores Habituales"
@@ -582,6 +583,24 @@ PastePrice(newPrice := 0){
 	
 	LogPriceChange(itemID, oldPrice, newPrice, modificadoresText, modificadorAdicionalString, precioAdicionalString)
 	lastPercent := percent
+	return true
+}
+
+SetMargins(margin1, margin2, margin3){
+	if(not WinExist(ventModificarArticulo))
+	{
+		ControlSend, Modifica, {Space}, %ventReporteArticulos%
+		WinWait, %ventModificarArticulo%, , 5
+		if ErrorLevel {
+			MsgBox, PastePrice - Could not special summon ventModificarArticulo.
+			return
+		}
+	}
+	
+	ControlFocus, %campoMargen1%, %ventModificarArticulo%
+	Send, %margin1%{Enter 3}%margin2%{Enter 3}%margin3%{Enter 4}, %ventModificarArticulo%
+	
+	
 	return true
 }
 ;}
