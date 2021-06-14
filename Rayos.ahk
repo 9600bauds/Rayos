@@ -271,6 +271,7 @@ Buscar(){
 	{
 		return
 	}
+	working := true
 		
 	alias := GetAlias()
 	if(alias == "NEXT!"){
@@ -392,6 +393,7 @@ Buscar(){
         return 1
     }
 	
+	working := false	
 }
 
 OnUnsuccessfulSearch(){
@@ -427,7 +429,7 @@ OnSuccessfulSearch(){
 			Send {Ctrl Down}c{Ctrl Up}
 			WinWait, A
 			success := PastePrice()
-			if(success and (not shouldStop) and lastPercent < 20 and lastPercent > -15) ;living on a EEEEDGE
+			if(success and (not shouldStop) and lastPercent <= 20 and lastPercent >= -15) ;living on a EEEEDGE
 			{
 				working := true
 				Send, {Launch_Mail}
