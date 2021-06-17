@@ -11,6 +11,7 @@ global campoCodigo := "Edit1"
 global campoPrecioCosto := "Edit8"
 global campoNota := "Edit18"
 global campoMargen1 := "Edit9"
+global campoRubro := "ComboBox3"
 
 global ventModificarProveedor := "Modificación"
 global ventProveedoresHabituales := "Proveedores Habituales"
@@ -263,6 +264,25 @@ GetAlias(parseAfter := true, checkNota := true){
 		aliasText := ParseAlias(aliasText)
 	}
 	return aliasText
+}
+
+FastSetAlias(thealias){
+	if(!thealias)
+		Send {Ctrl Down}c{Ctrl Up}
+		Sleep, 100
+		thealias := Clipboard
+	ControlClick, TBTNBMP29, %ventReporteArticulos%
+	WinWait, %ventAliasProveedor%
+	ControlFocus, Edit1, %ventAliasProveedor%
+	Send, {Shift Down}{End}{Shift Up}
+	thealias := "0" . thealias
+	Sleep, 100
+	SendRaw, % thealias
+	Sleep, 100
+	ControlFocus, Ok, %ventModificarArticulo%,,,, NA
+	ControlClick, Ok, %ventModificarArticulo%,,,, NA
+	Sleep, 500
+	ProximoArticulo(false)
 }
 ;}
 
@@ -599,6 +619,29 @@ SetMargins(margin1, margin2, margin3){
 	
 	ControlFocus, %campoMargen1%, %ventModificarArticulo%
 	Send, %margin1%{Enter 3}%margin2%{Enter 3}%margin3%{Enter 4}, %ventModificarArticulo%
+	
+	
+	return true
+}
+
+FastSetRubro(rubro){
+	if(not WinExist(ventModificarArticulo))
+	{
+		ControlSend, Modifica, {Space}, %ventReporteArticulos%
+		WinWait, %ventModificarArticulo%, , 5
+		if ErrorLevel {
+			MsgBox, PastePrice - Could not blueprint construct ventModificarArticulo.
+			return
+		}
+	}
+	
+	ControlFocus, %campoRubro%, %ventModificarArticulo%,,,, NA
+	Control, ChooseString, %rubro%, %campoRubro%, %ventModificarArticulo%
+	Sleep, 100
+	ControlFocus, Ok, %ventModificarArticulo%,,,, NA
+	ControlClick, Ok, %ventModificarArticulo%,,,, NA
+	Sleep, 200
+	ProximoArticulo(false)
 	
 	
 	return true
@@ -1072,6 +1115,9 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 
 ;{ Keybinds
 Launch_Media::
+;FastSetRubro("16")
+;FastSetAlias()
+;SetMargins("65", "30", "40")
 ;Msgbox, Testing...	
 WinRestore, LUPA - Gest
 return
