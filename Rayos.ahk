@@ -24,7 +24,7 @@ global ventListaArticulos := "ARTICULOS-LA CASA DEL ELECTRICISTA"
 global campoListado := "TXBROWSE1"
 
 global ventNotepad := "ahk_class Notepad"
-global ventWord := "ahk_exe WINWORD.EXE"
+global ventWord := " - Word"
 global ventCalc := "OpenOffice Calc"
 global ventCalc_Buscar := "Find & Replace"
 global ventCalc_Main := "ahk_class SALFRAME" ;Precisamente la planilla principal, no ningún diálogo
@@ -194,8 +194,6 @@ GetAlias(parseAfter := true, checkNota := true){
 	aliasText := ""
 	if(WinExist(ventReporteArticulos))
 	{
-		;ControlClick, TBTNBMP29, %ventReporteArticulos% ;silvina proofing
-		;WinWait, %ventAliasProveedor% ;silvina proofing
 		if(WinExist(ventAliasProveedor)){
 			ControlGetText, aliasText, %campoAlias_Dedicado%, %ventAliasProveedor%
 			WinKill, %ventAliasProveedor%
@@ -919,7 +917,7 @@ DeepCopyControl(controlName, windowName1, windowName2)
 		ControlFocus, %controlName%, %windowName2%
 		ControlSetText, %controlName%,, %windowName2%
 		SendRaw, % controlText
-		Sleep, 1000
+		Sleep, 200
 		;Send, {Enter}
 		
 		;Control, EditPaste, %controlText%, %controlName%, %windowName2%
@@ -929,6 +927,7 @@ DeepCopyControl(controlName, windowName1, windowName2)
 	if(controlType == "ComboBox")
 	{
 		ControlGet, controlText, Choice, , %controlName%, %windowName1%
+		ControlFocus, %controlName%, %windowName2%
 		Control, ChooseString, %controlText%, %controlName%, %windowName2%
 	}
 }
