@@ -1033,7 +1033,11 @@ Calc_SeekInRow(theVal)
 	closestIndex := 0
 	for key in mDatos[0]
 	{
-		if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*"))
+		if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*")) ;I genuinely have no idea what this is.
+		{
+			continue
+		}
+		if(RegExMatch(key, "[^0-9 ]{5,}")) ;No more than 5 non-number characters please
 		{
 			continue
 		}
