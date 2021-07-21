@@ -177,6 +177,10 @@ ParseAlias(alias){
 	}
 	else if(searchType == search_Ferrolux){
 		RegExMatch(alias, "([A-Z]+-\d+)", alias)
+		if WinExist(ventCalc)
+		{
+			alias := "^ " . alias
+		} 
 	}
 	else if(searchType == search_Solnic){
 		alias := "^" . alias . "[\s+|$]"
