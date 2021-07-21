@@ -438,48 +438,59 @@ OnSuccessfulSearch(){
 	{
 		return
 	}
-    WinActivate, %ventCalc_Main%
 	
-	for index, match in AllRegexMatches(PostSearchString, "{[^{}]+}")
+	ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+	RegExMatch(notaAdicional, "im).*Tooltip:[ ]+(.*)$", tooltips)
+	if(tooltips1)
 	{
-		if(match == "{Seek}"){
-			ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
-			oldPrice := TextPrice2Float(oldPrice)
-			ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
-			
-			RegExMatch(notaAdicional, "im).*Seek:[ ]+(.*)$", seekOverride)
-			if(seekOverride1)
-			{
-				seekOverride := "{" . seekOverride1 . "}"
-				Send, % seekOverride
-				Sleep, 100
-				Send {Ctrl Down}c{Ctrl Up}
-			}
-			else
-			{
-				Clipboard := Calc_SeekInRow(oldPrice)
-			}
-		}
-		else if(match == "{Paste}"){
-			WinWait, A
-			Send {Ctrl Down}c{Ctrl Up}
-			WinWait, A
-			success := PastePrice()
-			if(success and (not shouldStop) and lastPercent <= 20 and lastPercent >= -15) ;living on a EEEEDGE
-			{
-				working := true
-				Send, {Launch_Mail}
-			}
-			else
-			{
-				working := false
-				shouldStop := false
-			}
-		}
-		else{
-			Send, % match
-		}
+		ToolTip, %tooltips1%
+		SetTimer, RemoveToolTip, -1500
+	}
+
+	if WinExist(ventCalc)
+	{
+		WinActivate, %ventCalc_Main%
 		
+		for index, match in AllRegexMatches(PostSearchString, "{[^{}]+}")
+		{
+			if(match == "{Seek}"){
+				ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
+				oldPrice := TextPrice2Float(oldPrice)
+				ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+				
+				RegExMatch(notaAdicional, "im).*Seek:[ ]+(.*)$", seekOverride)
+				if(seekOverride1)
+				{
+					seekOverride := "{" . seekOverride1 . "}"
+					Send, % seekOverride
+					Sleep, 100
+					Send {Ctrl Down}c{Ctrl Up}
+				}
+				else
+				{
+					Clipboard := Calc_SeekInRow(oldPrice)
+				}
+			}
+			else if(match == "{Paste}"){
+				WinWait, A
+				Send {Ctrl Down}c{Ctrl Up}
+				WinWait, A
+				success := PastePrice()
+				if(success and (not shouldStop) and lastPercent <= 20 and lastPercent >= -15) ;living on a EEEEDGE
+				{
+					working := true
+					Send, {Launch_Mail}
+				}
+				else
+				{
+					working := false
+					shouldStop := false
+				}
+			}
+			else{
+				Send, % match
+			}
+		}
 	}
 
 }
@@ -1012,6 +1023,8 @@ Calc_SeekInRow(theVal)
 
 	oSel := oDoc.getCurrentSelection
 	oCell := ""
+	oHojaActiva := oDoc.getCurrentController().getActiveSheet()
+	
 	if(oSel.getImplementationName == "ScCellObj"){
 		oCell := oSel
 	}
@@ -1026,42 +1039,57 @@ Calc_SeekInRow(theVal)
 		return 
 	}
 	
-	Row := oCell.CellAddress.Row
-	
-	oHojaActiva := oDoc.getCurrentController().getActiveSheet()
-	oRango := oHojaActiva.getCellRangeByPosition(0,Row,20,Row)
-
-	mDatos := oRango.getDataArray()
-	
 	closestNumbr := 0
-	closestIndex := 0
-	for key in mDatos[0]
-	{
-		if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*")) ;I genuinely have no idea what this is.
+	cellRow := oCell.CellAddress.Row
+	cellCol := oCell.CellAddress.Column
+	candidateRow := cellRow
+	candidateCol := cellCol
+	
+	if(oCell.isMerged != 0){
+		Send, {Shift Down}{End}{Shift Up}
+		Sleep, 50
+		oSel := oDoc.getCurrentSelection
+		mDatos := oSel.getDataArray()
+	}
+	else{
+		oRango := oHojaActiva.getCellRangeByPosition(0,cellRow,20,cellRow) ;Yes it's hardcoded to 20 lol
+		mDatos := oRango.getDataArray()
+	}
+	
+	row_ := -1
+	while(row_ < mDatos.MaxIndex()){
+		row_++
+		col_ := -1
+		for key in mDatos[row_]
 		{
-			continue
-		}
-		if(RegExMatch(key, "[^0-9 ]{5,}")) ;No more than 5 non-number characters please
-		{
-			continue
-		}
-		numbr := TextPrice2Float(key)
-		if(IsNum(numbr))
-		{
-			ApplyPriceMultipliers(numbr, theVal)
-			if(abs(theVal-numbr) <= abs(theVal-closestNumbr))
+			col_++
+			;MsgBox, Evaluating %col_% - %row_%, which has a value of %key%!
+			if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*")) ;I genuinely have no idea what this is.
 			{
-				closestNumbr := numbr
-				closestIndex := A_Index-1 ;Unfun fact: Arrays start at 1 in AHK.
+				continue
+			}
+			if(RegExMatch(key, "[^0-9 ]{5,}")) ;No more than 5 non-number characters please
+			{
+				continue
+			}
+			numbr := TextPrice2Float(key)
+			if(IsNum(numbr))
+			{
+				ApplyPriceMultipliers(numbr, theVal)
+				if(abs(theVal-numbr) <= abs(theVal-closestNumbr))
+				{
+					closestNumbr := numbr
+					candidateRow := cellRow + row_
+					candidateCol := cellCol + col_
+				}
 			}
 		}
 	}
-	oCelda := oHojaActiva.getCellByPosition(closestIndex,Row)
+	oCelda := oHojaActiva.getCellByPosition(candidateCol,candidateRow)
 	oDoc.getCurrentController().Select(oCelda)
 	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deseleccionar
 	
 	return closestNumbr
-
 }
 
 ;Used for OOo API.
@@ -1219,6 +1247,10 @@ return
 #If
 Pause::
 	shouldStop := true
+return
+
+RemoveToolTip:
+ToolTip
 return
 
 Exit:
