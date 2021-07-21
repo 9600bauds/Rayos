@@ -251,7 +251,7 @@ GetAlias(parseAfter := true, checkNota := true){
 			}
 		}
 		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
-		RegExMatch(notaAdicional, "im).*[Alias completo|Alias|Simil]: (.*)$", aliasReplacement)
+		RegExMatch(notaAdicional, "im).*(?:Alias completo|Alias|Simil):[ ]+(.*)$", aliasReplacement)
 		if(aliasReplacement1)
 		{
 			aliasText := aliasReplacement1
