@@ -385,12 +385,12 @@ Buscar(){
             OnUnsuccessfulSearch()
             return 0
         }
-		else if(InStr(resultsText, "1 instance(s)")){
+		else if(InStr(resultsText, "1 instanc")){
 			ControlClick, AVSearchTreeDocItemView, %ventAdobeReader_Buscar%
             OnSuccessfulSearch()
             return 1
         }
-        else if(InStr(resultsText, "instance(s)")){
+        else if(InStr(resultsText, "instanc")){
             OnSuccessfulSearch()
             return 1
         }
