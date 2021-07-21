@@ -268,21 +268,21 @@ GetAlias(parseAfter := true, checkNota := true){
 	return aliasText
 }
 
-FastSetAlias(thealias){
-	if(!thealias)
+FastSetAlias(thealias := ""){
+	if(!thealias or theAlias = "")
 		Send {Ctrl Down}c{Ctrl Up}
 		Sleep, 100
 		thealias := Clipboard
 	ControlClick, TBTNBMP29, %ventReporteArticulos%
 	WinWait, %ventAliasProveedor%
+	WinActivate, %ventAliasProveedor%
 	ControlFocus, Edit1, %ventAliasProveedor%
 	Send, {Shift Down}{End}{Shift Up}
 	thealias := "0" . thealias
 	Sleep, 100
 	SendRaw, % thealias
 	Sleep, 100
-	ControlFocus, Ok, %ventModificarArticulo%,,,, NA
-	ControlClick, Ok, %ventModificarArticulo%,,,, NA
+	Send, {Enter 3}
 	Sleep, 500
 	ProximoArticulo(false)
 }
