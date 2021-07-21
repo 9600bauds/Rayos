@@ -1240,11 +1240,11 @@ Else
 return
 #If
 
-#If working
-Esc::
-	shouldStop := true
-return
-#If
+;#If working
+;Esc::
+;	shouldStop := true
+;return
+;#If
 Pause::
 	shouldStop := true
 return
