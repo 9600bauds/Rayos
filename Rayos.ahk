@@ -8,9 +8,9 @@ SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 ;{ Globals (most of these are effectively defines)
 global ventModificarArticulo := "Modificación : "
 global campoCodigo := "Edit1"
-global campoPrecioCosto := "Edit8"
-global campoNota := "Edit18"
-global campoMargen1 := "Edit9"
+global campoPrecioCosto := "Edit7"
+global campoNota := "Edit17"
+global campoMargen1 := "Edit8"
 global campoRubro := "ComboBox3"
 
 global ventModificarProveedor := "Modificación"
