@@ -1019,11 +1019,11 @@ Calc_SeekInRow(theVal)
 	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
 	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)
 
-	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deseleccionar
+	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deselect
 
 	oSel := oDoc.getCurrentSelection
 	oCell := ""
-	oHojaActiva := oDoc.getCurrentController().getActiveSheet()
+	oActiveSheet := oDoc.getCurrentController().getActiveSheet()
 	
 	if(oSel.getImplementationName == "ScCellObj"){
 		oCell := oSel
@@ -1040,30 +1040,34 @@ Calc_SeekInRow(theVal)
 	}
 	
 	closestNumbr := 0
-	cellRow := oCell.CellAddress.Row
-	cellCol := oCell.CellAddress.Column
-	candidateRow := cellRow
-	candidateCol := cellCol
+	searchResultRow := oCell.CellAddress.Row
+	searchResultCol := oCell.CellAddress.Column
+	candidateRow := searchResultRow
+	candidateCol := searchResultCol
 	
-	if(oCell.isMerged != 0){
-		Send, {Shift Down}{End}{Shift Up}
-		Sleep, 50
-		oSel := oDoc.getCurrentSelection
-		mDatos := oSel.getDataArray()
-	}
-	else{
-		oRango := oHojaActiva.getCellRangeByPosition(0,cellRow,20,cellRow) ;Yes it's hardcoded to 20 lol
-		mDatos := oRango.getDataArray()
-	}
+	;Get the used range of the sheet, first, so we can use it as reference for what columns to evaluate.
+	oCursor := oActiveSheet.createCursor()
+	oCursor.gotoStartOfUsedArea(False)
+	oCursor.gotoEndOfUsedArea(True)
+	oUsedRange := oCursor.getRangeAddress()
+	;Get the area of our base cell, whether merged or not, so we can use it as for reference for what rows to evaluate.
+	oCursor := oActiveSheet.createCursorByRange(oCell)
+	oCursor.collapseToMergedArea()
+	oMergedArea := oCursor.getRangeAddress()
+	;All together now!
+	rg := oActiveSheet.getCellRangeByPosition(oUsedRange.StartColumn, oMergedArea.StartRow, oUsedRange.EndColumn, oMergedArea.EndRow)
+	mData := rg.getDataArray()
 	
 	row_ := -1
-	while(row_ < mDatos.MaxIndex()){
+	while(row_ < mData.MaxIndex()){
 		row_++
 		col_ := -1
-		for key in mDatos[row_]
+		for key in mData[row_]
 		{
 			col_++
-			;MsgBox, Evaluating %col_% - %row_%, which has a value of %key%!
+			currRow := searchResultRow + row_
+			currCol := col_
+			;MsgBox, Evaluating %currRow% - %currCol%, which has a value of %key%!
 			if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*")) ;I genuinely have no idea what this is.
 			{
 				continue
@@ -1076,18 +1080,20 @@ Calc_SeekInRow(theVal)
 			if(IsNum(numbr))
 			{
 				ApplyPriceMultipliers(numbr, theVal)
+				;todo: apply last good modifier
 				if(abs(theVal-numbr) <= abs(theVal-closestNumbr))
 				{
 					closestNumbr := numbr
-					candidateRow := cellRow + row_
-					candidateCol := cellCol + col_
+					candidateRow := currRow
+					candidateCol := currCol
 				}
 			}
 		}
 	}
-	oCelda := oHojaActiva.getCellByPosition(candidateCol,candidateRow)
-	oDoc.getCurrentController().Select(oCelda)
-	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deseleccionar
+	;MsgBox, Selecting %candidateCol% - %candidateRow%!
+	oCell := oActiveSheet.getCellByPosition(candidateCol,candidateRow)
+	oDoc.getCurrentController().Select(oCell)
+	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deselect
 	
 	return closestNumbr
 }
