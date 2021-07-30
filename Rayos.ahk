@@ -858,10 +858,12 @@ toggleSuppressWarnings(){
     if(suppressWarnings == true){
         Menu, Tray, Uncheck, Suppress Warnings
         suppressWarnings := false
+		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings
     }
     else{
         Menu, Tray, Check, Suppress Warnings
         suppressWarnings := true
+		RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings, Yes
     }
 }
 
@@ -870,12 +872,14 @@ toggleAutoPilot(){
     if(autoPilot == true){
         Menu, Tray, Uncheck, Skip on Unsuccessful Search
         autoPilot := false
+		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch
     }
     else{
         Menu, Tray, Check, Skip on Unsuccessful Search
         autoPilot := true
+		RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch, Yes
     }
-}
+}	
 
 Menu, Tray, Add  ; Add a separator line.
 Menu, Tray, Add, Exit, Exit
@@ -1112,6 +1116,8 @@ MakePropertyValue(poSM, cName, uValue)
 RegRead, savedModificadores, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedModificadores
 RegRead, savedPostSearchString, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedPostSearchString
 RegRead, savedSearchType, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
+RegRead, savedSuppressWarnings, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings
+RegRead, savedSkipOnSearch, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch
 if(savedModificadores or savedPostSearchString or savedSearchType)
 {
 	explanationConfig := "Saved config:"
@@ -1126,6 +1132,14 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 	if(savedSearchType)
 	{
 		explanationConfig = %explanationConfig%`nSearch Type: %savedSearchType%
+	}
+	if(savedSuppressWarnings)
+	{
+		explanationConfig = %explanationConfig%`nSuppress Warnings: %savedSuppressWarnings%
+	}
+	if(savedSkipOnSearch)
+	{
+		explanationConfig = %explanationConfig%`nSkip on Unsuccessful Search: %savedSkipOnSearch%
 	}
 	explanationConfig = %explanationConfig%`n`nImport?
 
@@ -1144,12 +1158,22 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 		{
 			setSearchType(savedSearchType)
 		}
+		if(savedSuppressWarnings)
+		{
+			toggleSuppressWarnings()
+		}
+		if(savedSkipOnSearch)
+		{
+			toggleAutoPilot()
+		}
 	}
 	IfMsgBox, Cancel
 	{
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedModificadores
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedPostSearchString
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
+		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings
+		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch
 	}
 }
 ;}
