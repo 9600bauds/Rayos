@@ -659,6 +659,36 @@ FastSetRubro(rubro){
 	
 	return true
 }
+
+FastCorrectNota(proov){ ;Unashamedly adhoc.
+	if(proov == "Monteluz")
+	{
+		alias := GetAlias(false)
+		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+		if(RegExMatch(alias, "\-1") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 4$"))
+		{
+			SetEdit(campoNota, ventModificarArticulo, "Seek: Right 4")
+		}
+		else if(RegExMatch(alias, "\-7") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 6$"))
+		{
+			SetEdit(campoNota, ventModificarArticulo, "Seek: Right 6")
+		}
+		else if(RegExMatch(alias, "\-3") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 10$"))
+		{
+			SetEdit(campoNota, ventModificarArticulo, "Seek: Right 10")
+		}
+		else
+		{
+			MsgBox, Idk lol
+			return
+		}
+		ControlFocus, Ok, %ventModificarArticulo%,,,, NA
+		ControlClick, Ok, %ventModificarArticulo%,,,, NA
+		Sleep, 200
+		ProximoArticulo(false)
+		;MsgBox, % alias
+	}
+}
 ;}
 
 ;{ Navegación
@@ -926,6 +956,14 @@ GetClassName(hwnd)
 	return buff
 }
 
+SetEdit(controlName, windowName, newText)
+{
+	ControlFocus, %controlName%, %windowName%
+	ControlSetText, %controlName%,, %windowName%
+	SendRaw, % newText
+	Sleep, 200
+}
+
 DeepCopyControl(controlName, windowName1, windowName2)
 {
 	ControlGet, controlHwnd, Hwnd,,%controlName%,%windowName1%
@@ -1180,6 +1218,7 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 
 ;{ Keybinds
 Launch_Media::
+;FastCorrectNota("Monteluz")
 ;FastSetRubro("16")
 ;FastSetAlias()
 ;SetMargins("65", "30", "40")
