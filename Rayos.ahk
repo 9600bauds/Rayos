@@ -11,10 +11,14 @@ global campoCodigo := "Edit1"
 global campoPrecioCosto := "Edit7"
 global campoNota := "Edit17"
 global campoMargen1 := "Edit8"
+global campoMargen2 := "Edit11"
+global campoMargen3:= "Edit14"
 global campoRubro := "ComboBox3"
 
 global ventModificarProveedor := "Modificación"
+global ventVerProveedor := "Consulta"
 global ventProveedoresHabituales := "Proveedores Habituales"
+global botonProovedoresHabituales := "Button7"
 global campoAlias_Habituales := "Edit2"
 global ventAliasProveedor := "Alias del Proveedor"
 global campoAlias_Dedicado := "Edit1"
@@ -34,6 +38,7 @@ global ventAdobeReader_BuscarOK := "Button18"
 global ventAdobeReader_Buscar_Input := "Edit5"
 global ventAbodeReader_Buscar_Matches := "Static12"
 
+global ventFactProov := "FACTURA  Proveedor.Nueva"
 
 global search_Default = "Default"
 global search_Exact = "Exact"
@@ -221,7 +226,7 @@ GetAlias(parseAfter := true, checkNota := true){
 		if(not aliasText){
 			if(not WinExist(ventProveedoresHabituales))
 			{
-				ControlClick, Button7, %ventModificarArticulo%,,,, NA ;Clickea el boton Proveedores Habituales
+				ControlClick, %botonProovedoresHabituales%, %ventModificarArticulo%,,,, NA ;Clickea el boton Proveedores Habituales
 				WinWait, %ventProveedoresHabituales%, , 5
 				if ErrorLevel {
 					MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
@@ -1269,7 +1274,7 @@ Buscar()
 return
 
 !^Launch_Mail::
-camposAClonar := ["Edit3", "Edit6", "Edit7", "ComboBox1", "ComboBox5", "Edit9", "Edit12", "Edit15", "ComboBox2", "ComboBox3", "ComboBox4"]
+camposAClonar := ["Edit3", "Edit5", "Edit6", "ComboBox1", "ComboBox5", "Edit8", "Edit11", "Edit14", "ComboBox2", "ComboBox3", "ComboBox4"]
 for i, elCampo in camposAClonar
 {
 	DeepCopyControl(elCampo, "Modifica", "Nuevo")
