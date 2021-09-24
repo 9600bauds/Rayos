@@ -1283,6 +1283,45 @@ If(WinExist("Diferencia"))
 	Send, {Left}{Enter}
 	return
 }
+if WinExist(ventFactProov)
+{
+	if WinExist("Nuevo")
+	{
+		ControlSend, Edit4, {Enter}, Nuevo
+		WinWait, %ventModificarArticulo%
+		ControlGetText, factPrecioCosto, %campoPrecioCosto%, %ventModificarArticulo%
+		factPrecioCosto := TextPrice2Float(factPrecioCosto)
+		ApplyPriceMultipliers(factPrecioCosto)
+		
+		ControlClick, %botonProovedoresHabituales%, %ventModificarArticulo%,,,, NA ;Clickea el boton Proveedores Habituales
+		WinWait, %ventProveedoresHabituales%, , 5
+		if ErrorLevel {
+			MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
+			return
+		}
+		ControlClick, Ver, %ventProveedoresHabituales%,,,, NA
+		WinWait, %ventVerProveedor%, , 5
+		if ErrorLevel
+		{
+			MsgBox, GetAlias - Could not summon ventVerProveedor to this mortal coil.
+			return
+		}
+		ControlGetText, factAliasText, %campoAlias_Habituales%, %ventVerProveedor%
+		ControlSend,, {Esc}, %ventVerProveedor%
+		ControlSend,, {Esc}, %ventProveedoresHabituales%
+		ControlSend, Cancela, {Space}, %ventModificarArticulo%
+		ControlFocus, TWBROWSE1, %ventFactProov%
+		ControlSend, TWBROWSE1, {PGDN}, %ventFactProov%
+		
+		finalDetailText = %factAliasText% - %factPrecioCosto%`r`n
+		LogSend(finalDetailText)
+		Sleep, 200
+		ControlClick, Button1, %ventFactProov%,,,, NA
+
+	}
+	return
+}
+
 WinWait, %ventModificarArticulo%
 ControlSend, Ok, {Space}, %ventModificarArticulo%
 ControlSend, Sí, {Enter}, Atención
