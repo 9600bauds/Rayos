@@ -1108,7 +1108,7 @@ Calc_SeekInRow(theVal)
 		{
 			col_++
 			currRow := searchResultRow + row_
-			currCol := col_
+			currCol := oUsedRange.StartColumn + col_
 			;MsgBox, Evaluating %currRow% - %currCol%, which has a value of %key%!
 			if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*")) ;I genuinely have no idea what this is.
 			{
@@ -1125,6 +1125,7 @@ Calc_SeekInRow(theVal)
 				;todo: apply last good modifier
 				if(abs(theVal-numbr) <= abs(theVal-closestNumbr))
 				{
+					;MsgBox, %currRow% - %currCol%: %theVal%-%numbr% / %theVal%-%closestNumbr%
 					closestNumbr := numbr
 					candidateRow := currRow
 					candidateCol := currCol
