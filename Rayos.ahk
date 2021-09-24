@@ -624,7 +624,7 @@ PastePrice(newPrice := 0){
 	return true
 }
 
-SetMargins(margin1, margin2, margin3){
+SetMargins(margin1, margin2, margin3, fast := false){
 	if(not WinExist(ventModificarArticulo))
 	{
 		ControlSend, Modifica, {Space}, %ventReporteArticulos%
@@ -636,7 +636,25 @@ SetMargins(margin1, margin2, margin3){
 	}
 	
 	ControlFocus, %campoMargen1%, %ventModificarArticulo%
-	Send, %margin1%{Enter 3}%margin2%{Enter 3}%margin3%{Enter 4}, %ventModificarArticulo%
+	Send, %margin1%{Enter}
+	Sleep, 100
+	ControlFocus, %campoMargen2%, %ventModificarArticulo%
+	Send, %margin2%{Enter}
+	Sleep, 100
+	ControlFocus, %campoMargen3%, %ventModificarArticulo%
+	Send, %margin3%{Enter}
+	Sleep, 100
+	ControlFocus, ComboBox4, %ventModificarArticulo%
+	Control, ChooseString, VENTAS/COMPRAS, ComboBox4, %ventModificarArticulo%
+	;ControlSend, ComboBox4, {Enter}, %ventModificarArticulo%
+	
+	if(fast)
+	{
+		Sleep, 100
+		ControlFocus, Ok, %ventModificarArticulo%,,,, NA
+		ControlClick, Ok, %ventModificarArticulo%,,,, NA
+		ProximoArticulo(false)
+	}
 	
 	
 	return true
@@ -1227,7 +1245,7 @@ Launch_Media::
 ;FastCorrectNota("Monteluz")
 ;FastSetRubro("16")
 ;FastSetAlias()
-;SetMargins("65", "30", "40")
+;SetMargins("60", "25", "40", true)
 ;Msgbox, Testing...	
 WinRestore, LUPA - Gest
 return
