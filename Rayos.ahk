@@ -1302,9 +1302,30 @@ If(WinExist("Diferencia"))
 }
 if WinExist(ventFactProov)
 {
-	if WinExist("Nuevo")
+	if (WinExist("Modificación"))
+	{
+		ControlGet, tipoIVA, Choice, , ComboBox1, Modificación
+		if (InStr(tipoIVA, "NETO GRAVADO"))
+		{
+			ControlGetText, netoPrevio, Edit1, Modificación
+			ControlGetText, netoReal, Static12, %ventFactProov%
+			InputBox, totalTemp, Importe Sumado, Ingrese el importe sumado que aparece abajo a la derecha`, al lado del botón Asigna.
+			if(ErrorLevel or not IsNum(totalTemp))
+			{
+				return
+			}
+			newNeto := TextPrice2Float(netoPrevio) - TextPrice2Float(totalTemp) + TextPrice2Float(netoReal)
+			ControlFocus, Edit1, Modificación
+			ControlSetText, Edit1,, Modificación
+			SendRaw, % newNeto
+			return
+		}
+	}
+
+	if (WinExist("Nuevo") or WinExist("Modificación"))
 	{
 		ControlSend, Edit4, {Enter}, Nuevo
+		ControlSend, Edit4, {Enter}, Modificación
 		WinWait, %ventModificarArticulo%
 		ControlGetText, factPrecioCosto, %campoPrecioCosto%, %ventModificarArticulo%
 		factPrecioCosto := TextPrice2Float(factPrecioCosto)
