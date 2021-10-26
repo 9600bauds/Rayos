@@ -1154,6 +1154,10 @@ Calc_SeekInRow(theVal)
 			{
 				continue
 			}
+			if(RegExMatch(key, "\d[^\d\n\.\,\d]+")) ;Numbers shall not be intersected by anything besides a dot or a comma (1x20 is bad, 17 18 is bad etc)
+			{
+				continue
+			}
 			numbr := TextPrice2Float(key)
 			if(IsNum(numbr))
 			{
