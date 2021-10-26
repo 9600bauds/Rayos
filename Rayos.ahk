@@ -389,11 +389,13 @@ Buscar(){
         ControlClick, %ventAdobeReader_BuscarOK%, %ventAdobeReader_Buscar%
         WinWait, %ventAdobeReader_Buscar%
         ControlFocus, %ventAdobeReader_Buscar_Input%, %ventAdobeReader_Buscar%
+		ControlSetText, %ventAdobeReader_Buscar_Input%,, %ventAdobeReader_Buscar%
 		SendRaw, % alias
 		Send, {Enter}
 		
 		WinWait, %ventAdobeReader_Buscar%
 		WaitControlNotExist("Stop", ventAdobeReader_Buscar)
+		WaitControlExist("Nueva búsqueda", ventAdobeReader_Buscar)
         WinWait, %ventAdobeReader_Buscar%
 		
         ControlGetText, resultsText, %ventAbodeReader_Buscar_Matches%, %ventAdobeReader_Buscar%
