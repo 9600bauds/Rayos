@@ -372,7 +372,18 @@ Buscar(){
 		return 0
     }
 	else if WinExist(ventAdobeReader_Buscar)
-	{ ;TODO TEST
+	{
+		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+		RegExMatch(notaAdicional, "im).*Pagina:[ ]+(.*)$", pageOverrides)
+		if(pageOverrides1)
+		{
+			WinActivate, %ventAdobeReader%
+			WinWait, %ventAdobeReader%
+			Send, ^+n ;Ctrl+Shift+N: Go To Page
+			Send, %pageOverrides1%{Enter}
+			return
+		}
+		
         WinActivate, %ventAdobeReader_Buscar%
         WinWait, %ventAdobeReader_Buscar%
         ControlClick, %ventAdobeReader_BuscarOK%, %ventAdobeReader_Buscar%
