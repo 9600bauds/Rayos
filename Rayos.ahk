@@ -1148,6 +1148,7 @@ Calc_SeekInRow(theVal)
 			currRow := searchResultRow + row_
 			currCol := oUsedRange.StartColumn + col_
 			;MsgBox, Evaluating %currRow% - %currCol%, which has a value of %key%!
+			key := RegExReplace(key, "\s+USD", "") ;Just remove these common words.
 			if(RegExMatch(key, "(?:[a-zA-Z]+[0-9.,]|[0-9.,]+[a-zA-Z])[a-zA-Z0-9.,]*")) ;I genuinely have no idea what this is.
 			{
 				continue
@@ -1156,7 +1157,7 @@ Calc_SeekInRow(theVal)
 			{
 				continue
 			}
-			if(RegExMatch(key, "\d[^\d\n\.\,\d]+")) ;Numbers shall not be intersected by anything besides a dot or a comma (1x20 is bad, 17 18 is bad etc)
+			if(RegExMatch(key, "\d[^\d\n\.\,\d]+\d")) ;Numbers shall not be intersected by anything besides a dot or a comma (1x20 is bad, 17 18 is bad etc)
 			{
 				continue
 			}
