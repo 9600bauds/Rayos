@@ -106,13 +106,15 @@ SetModificadores(modificadoresInput := "", displayMessage := true){
 		return -1
 	}
 	
+	
+	relativeDiff := Round((tempTally - modificadoresMult) / modificadoresMult * 100, 2)
 	modificadoresText := tempStr
 	modificadoresMult := tempTally
 	tempPercent := Multiplier2Percent(modificadoresMult)
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedModificadores, %modificadoresText%
 	if(displayMessage)
 	{
-		MsgBox, Modificadores actualizados. Nuevos modificadores:`n%modificadoresText%`n(%tempPercent% / x%modificadoresMult%)
+		MsgBox, Modificadores actualizados. Nuevos modificadores:`n%modificadoresText%`n(%tempPercent% / x%modificadoresMult%)`nDiferencia relativa: %relativeDiff%`%
 	}
 }
 
