@@ -6,19 +6,28 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 
 ;{ Globals (most of these are effectively defines)
-global ventModificarArticulo := "Modificación : "
+global ventModificarArticulo := "Modificación :"
+global ventNuevoArticulo := "Nuevo"
 global campoCodigo := "Edit1"
+global campoCodBarras := "Edit2"
+global campoDescripcion := "Edit3"
+global campoDescripcionReducida := "Edit4"
+global campoPuntoPedido := "Edit5"
+global campoEmpaque := "Edit6"
+global campoUnidad := "ComboBox1"
+global campoMoneda := "ComboBox5"
 global campoPrecioCosto := "Edit7"
-global campoNota := "Edit17"
 global campoMargen1 := "Edit8"
 global campoMargen2 := "Edit11"
 global campoMargen3:= "Edit14"
+global campoIVA := "ComboBox2"
 global campoRubro := "ComboBox3"
+global campoNota := "Edit17"
 
 global ventModificarProveedor := "Modificación"
 global ventVerProveedor := "Consulta"
 global ventProveedoresHabituales := "Proveedores Habituales"
-global botonProovedoresHabituales := "Button7"
+global botonProovedoresHabituales := "Button17"
 global campoAlias_Habituales := "Edit2"
 global ventAliasProveedor := "Alias del Proveedor"
 global campoAlias_Dedicado := "Edit1"
@@ -26,6 +35,7 @@ global campoAlias_Dedicado := "Edit1"
 global ventReporteArticulos := "Artículos a Modificar"
 global ventListaArticulos := "ARTICULOS-LA CASA DEL ELECTRICISTA"
 global campoListado := "TXBROWSE1"
+global botonModificar_Listado = "TBTNBMP35"
 
 global ventNotepad := "ahk_class Notepad"
 global ventWord := " - Word"
@@ -38,7 +48,9 @@ global ventAdobeReader_BuscarOK := "Button18"
 global ventAdobeReader_Buscar_Input := "Edit5"
 global ventAbodeReader_Buscar_Matches := "Static12"
 
-global ventFactProov := "FACTURA  Proveedor.Nueva"
+global ventFactProov := "FACTURA  Proveedor.Nueva" ;sic
+global ventFact_Nuevo := "Nuevo"
+global ventFact_Modificacion := "Modificación"
 
 global search_Default = "Default"
 global search_Exact = "Exact"
@@ -46,6 +58,7 @@ global search_Start = "Match Start"
 global search_End = "Match End"
 global search_WordBoundaries = "Match Word Boundaries"
 global search_RemoveLastWord = "Remove Last Word"
+global search_RemoveColors = "Remove Colors"
 global search_RemoveLetters = "Remove Letters"
 global search_LongestNumber = "Longest Number"
 global search_LongestWord = "Longest Word"
@@ -58,6 +71,7 @@ global searchType := "Default"
 
 global suppressWarnings := false
 global autoPilot := false
+global forceSeek := false
 global overrideMiddleClick := true
 
 global modificadoresText := "+0%" ;These two should be equivalent and are only set once in SetModificadores().
@@ -70,6 +84,8 @@ global PostSearchString := ""
 
 global working := false
 global shouldStop := false
+
+global lastSeekCol := ""
 ;}
 
 ;{ Ventana Lista Artículos
@@ -152,6 +168,10 @@ ParseAlias(alias){
 	else if(searchType == search_RemoveLastWord){
 		alias := RegExReplace(alias, " \w+$", "")
 	}
+	else if(searchType == search_RemoveColors){
+		alias := RegExReplace(alias, "[A-Za-z]", "")
+		alias := RegExReplace(alias, "\/$", "")
+	}
 	else if(searchType == search_RemoveLetters){
 		alias := RegExReplace(alias, "[A-Za-z]", "")
 	}
@@ -183,7 +203,7 @@ ParseAlias(alias){
 		alias := RegExReplace(alias, " \w+$", "") . "$"
 	}
 	else if(searchType == search_Ferrolux){
-		RegExMatch(alias, "([A-Z]+-\d+)", alias)
+		RegExMatch(alias, "([A-Z]+-\d+(\/\d+)?)", alias)
 		if WinExist(ventCalc)
 		{
 			alias := "^ " . alias
@@ -214,11 +234,11 @@ GetAlias(parseAfter := true, checkNota := true){
 			SetControlDelay -1
 			Loop{
 				if(A_Index = 20){
-					MsgBox, GetAlias - Could not cometh here ventModificarArticulo.
+					MsgBox, GetAlias - Could not get (551) ventModificarArticulo.
 					return
 				}
-				ControlClick, Modifica, %ventReporteArticulos%,,,, NA
-				ControlSend, Modifica, {Space}, %ventReporteArticulos%
+				;ControlClick, %botonModificar_Listado%, %ventReporteArticulos%,,,, NA
+				ControlSend, %botonModificar_Listado%, {Space}, %ventReporteArticulos%
 				WinWait, %ventModificarArticulo%, , 0.5
 				if not ErrorLevel {
 					Break
@@ -234,17 +254,17 @@ GetAlias(parseAfter := true, checkNota := true){
 					MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
 					return
 				}
-				ControlClick, Modifica, %ventProveedoresHabituales%,,,, NA
-				WinWait, %ventModificarProveedor%, , 5
+				ControlClick, TBTNBMP11, %ventProveedoresHabituales%,,,, NA
+				WinWait, %ventVerProveedor%, , 5
 				if ErrorLevel
 				{
 					MsgBox, GetAlias - Could not summon ventModificarProveedor to this mortal coil.
 					return
 				}
 			}
-			ControlGetText, aliasText, %campoAlias_Habituales%, %ventModificarProveedor%
+			ControlGetText, aliasText, %campoAlias_Habituales%, %ventVerProveedor%
 			
-			WinKill, %ventModificarProveedor%
+			WinKill, %ventVerProveedor%
 			WinKill, %ventProveedoresHabituales%
 		}
 	}
@@ -253,8 +273,8 @@ GetAlias(parseAfter := true, checkNota := true){
 	{
 		if(not WinExist(ventModificarArticulo))
 		{
-			ControlClick, Modifica, %ventReporteArticulos%,,,, NA
-			ControlSend, Modifica, {Space}, %ventReporteArticulos%
+			;ControlClick, %botonModificar_Listado%, %ventReporteArticulos%,,,, NA
+			ControlSend, %botonModificar_Listado%, {Space}, %ventReporteArticulos%
 			WinWait, %ventModificarArticulo%, , 5
 			if ErrorLevel {
 				MsgBox, GetAlias - Could not cometh here ventModificarArticulo.
@@ -293,6 +313,18 @@ FastSetAlias(thealias := ""){
 	Sleep, 500
 	ProximoArticulo(false)
 }
+
+FastAliasizeDesc(){
+	myAlias := GetAlias()
+	ControlFocus, %campoDescripcion%, %ventModificarArticulo%
+	Sleep, 300
+	ControlSend, %campoDescripcion%, {End}{Space}, %ventModificarArticulo%
+	Control, EditPaste, %myAlias%, %campoDescripcion%, %ventModificarArticulo%
+	Sleep, 300
+	ControlFocus, Ok, %ventModificarArticulo%,,,, NA
+	ControlClick, Ok, %ventModificarArticulo%,,,, NA
+}
+
 ;}
 
 ;{ Búsqueda
@@ -479,10 +511,33 @@ OnSuccessfulSearch(){
 				ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
 				
 				RegExMatch(notaAdicional, "im).*Seek:[ ]+(.*)$", seekOverride)
+				
+				if(not seekOverride1 and forceSeek and Calc_IsInMergedCell())
+				{
+					ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+					InputBox, tempSeekInput, Nuevo Seek..., Ingrese el nuevo Seek.,,,,,,,,{End}{Left 2}
+					if(ErrorLevel)
+					{
+						MsgBox, Seek inválido. (%tempSeekInput%)
+						return
+					}
+					else
+					{
+						finalNota := "Seek: " . tempSeekInput . "`n" . notaAdicional
+						WinActivate, %ventModificarArticulo%
+						SetEdit(campoNota, ventModificarArticulo, finalNota)
+						Sleep, 100
+					}
+					
+				}
+				
+				;Seek: {End}{Down}{Left 2}
 				if(seekOverride1)
 				{
-					seekOverride := "{" . seekOverride1 . "}"
-					Send, % seekOverride
+					if not(RegExMatch(seekOverride1, "{.*}")){
+						seekOverride1 := "{" . seekOverride1 . "}"
+					}
+					Send, % seekOverride1
 					Sleep, 100
 					Send {Ctrl Down}c{Ctrl Up}
 				}
@@ -554,9 +609,9 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 			}
 		}
 		precioAdicional := preciosGuardados[preciosAdicionales1]
-		if(newPrice * 10 < precioAdicional){ ;FUCK THOUSANDS SEPARATORS
-			precioAdicional := precioAdicional / 1000
-		}
+		;if(newPrice * 10 < precioAdicional){ ;FUCK THOUSANDS SEPARATORS
+		;	precioAdicional := precioAdicional / 1000
+		;}
 		precioAdicionalString := " +" . precioAdicional
 		newPrice := newPrice + precioAdicional
 	}
@@ -773,7 +828,7 @@ AnteriorArticulo(openAfter := true)
 LogPriceChange(itemID := "", oldPrice := "", newPrice = "", modificadores := "", modificadorAdicional := "", precioAdicional := ""){
     percent := (100*newPrice/oldPrice)-100
     percent := Round(percent, 1)
-    finalText = %itemID%: %percent%`% (%modificadores%%modificadorAdicional%%precioAdicional%, %oldPrice% -> %newPrice%)
+    finalText = %itemID%: %percent%`% (%lastSeekCol%, %modificadores%%modificadorAdicional%%precioAdicional%, %oldPrice% -> %newPrice%)
     finalText = %finalText%`r`n ;concatenation
     LogSend(finalText)
 }
@@ -849,6 +904,10 @@ Menu, searchTypeMenu, Add, %search_RemoveLastWord%, setSearchRemoveLastWord, Rad
 setSearchRemoveLastWord(){
     setSearchType(search_RemoveLastWord)
 }
+Menu, searchTypeMenu, Add, %search_RemoveColors%, setSearchRemoveColors, Radio
+setSearchRemoveColors(){
+    setSearchType(search_RemoveColors)
+}
 Menu, searchTypeMenu, Add, %search_RemoveLetters%, setSearchRemoveLetters, Radio
 setSearchRemoveLetters(){
     setSearchType(search_RemoveLetters)
@@ -893,6 +952,7 @@ setSearchType(type, initial := false){
     Menu, searchTypeMenu, Uncheck, %search_End%
 	Menu, searchTypeMenu, Uncheck, %search_WordBoundaries%
     Menu, searchTypeMenu, Uncheck, %search_RemoveLastWord%
+	Menu, searchTypeMenu, Uncheck, %search_RemoveColors%
 	Menu, searchTypeMenu, Uncheck, %search_RemoveLetters%
     Menu, searchTypeMenu, Uncheck, %search_LongestNumber%
 	Menu, searchTypeMenu, Uncheck, %search_LongestWord%
@@ -947,7 +1007,21 @@ toggleAutoPilot(){
         autoPilot := true
 		RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch, Yes
     }
-}	
+}
+
+Menu, Tray, Add, Force Seek, toggleForceSeek
+toggleForceSeek(){
+    if(forceSeek == true){
+        Menu, Tray, Uncheck, Force Seek
+        forceSeek := false
+		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedForceSeek
+    }
+    else{
+        Menu, Tray, Check, Force Seek
+        forceSeek := true
+		RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedForceSeek, Yes
+    }
+}
 
 Menu, Tray, Add  ; Add a separator line.
 Menu, Tray, Add, Exit, Exit
@@ -997,18 +1071,23 @@ GetClassName(hwnd)
 SetEdit(controlName, windowName, newText)
 {
 	ControlFocus, %controlName%, %windowName%
+	Sleep, 50
 	ControlSetText, %controlName%,, %windowName%
+	Sleep, 50
 	SendRaw, % newText
-	Sleep, 200
+	Sleep, 100
 }
 
-DeepCopyControl(controlName, windowName1, windowName2)
+DeepCopyControl(controlName, windowName1, windowName2, blacklist := "")
 {
 	ControlGet, controlHwnd, Hwnd,,%controlName%,%windowName1%
 	controlType := GetClassName(controlHwnd)
 	if(controlType == "Edit")
 	{
 		ControlGetText, controlText, %controlName%, %windowName1%
+		if(blacklist){
+			StringReplace, controlText, controlText, %blacklist%, , All
+		}
 		ControlFocus, %controlName%, %windowName2%
 		ControlSetText, %controlName%,, %windowName2%
 		SendRaw, % controlText
@@ -1056,6 +1135,15 @@ WaitControlNotExist(controlName, windowName, tries := 100, retryTimer := 50){
 	Until A_Index > tries
 }
 
+FirstWindowThatExists(windows){
+	for index, windcandidate in windows
+	{
+		If(WinExist(windcandidate)){
+			return windcandidate
+		}
+	}
+}
+
 WindowUnderMouse()
 {
 	MouseGetPos,,,underCursor
@@ -1089,6 +1177,22 @@ Calc_GetSelectedCoords()
 	Row:=oCell.CellAddress.Row 
 	FinalStr := Col "-" Row
 	Return FinalStr
+}
+
+Calc_IsInMergedCell()
+{
+	oSM := ComObjCreate("com.sun.star.ServiceManager")			; This line is mandatory with AHK for OOo API
+	oDesk := oSM.createInstance("com.sun.star.frame.Desktop")	; Create the first and most important service
+	Array := ComObjArray(VT_VARIANT:=12, 2)
+	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
+	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)  
+	oSel := oDoc.getCurrentSelection
+	if(oSel.getImplementationName == "ScCellRangeObj"){
+		return true
+	}
+	else{
+		return false
+	}
 }
 
 Calc_SeekInRow(theVal)
@@ -1172,6 +1276,7 @@ Calc_SeekInRow(theVal)
 					closestNumbr := numbr
 					candidateRow := currRow
 					candidateCol := currCol
+					lastSeekCol := col_ - searchResultCol
 				}
 			}
 		}
@@ -1200,6 +1305,7 @@ RegRead, savedPostSearchString, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedPostSearc
 RegRead, savedSearchType, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
 RegRead, savedSuppressWarnings, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings
 RegRead, savedSkipOnSearch, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch
+RegRead, savedForceSeek, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedForceSeek
 if(savedModificadores or savedPostSearchString or savedSearchType)
 {
 	explanationConfig := "Saved config:"
@@ -1222,6 +1328,10 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 	if(savedSkipOnSearch)
 	{
 		explanationConfig = %explanationConfig%`nSkip on Unsuccessful Search: %savedSkipOnSearch%
+	}
+	if(savedForceSeek)
+	{
+		explanationConfig = %explanationConfig%`nForceSeek: %savedForceSeek%
 	}
 	explanationConfig = %explanationConfig%`n`nImport?
 
@@ -1248,6 +1358,10 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 		{
 			toggleAutoPilot()
 		}
+		if(savedForceSeek)
+		{
+			toggleForceSeek()
+		}
 	}
 	IfMsgBox, Cancel
 	{
@@ -1256,6 +1370,7 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch
+		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedForceSeek
 	}
 }
 ;}
@@ -1267,7 +1382,9 @@ Launch_Media::
 ;FastSetAlias()
 ;SetMargins("60", "25", "40", true)
 ;Msgbox, Testing...	
+;FastAliasizeDesc()
 WinRestore, LUPA - Gest
+
 return
 
 !^Launch_Media::
@@ -1288,11 +1405,15 @@ Media_Play_Pause::
 return
 
 Media_Prev::
+;MouseClick, X1
+;return
 AnteriorArticulo(false)
 Buscar()
 return
 
 Media_Next::
+;MouseClick, X2
+;return
 ProximoArticulo(false)
 Buscar()
 return
@@ -1304,13 +1425,14 @@ If(WinExist("Diferencia"))
 	return
 }
 if WinExist(ventFactProov)
-{
-	if (WinExist("Modificación"))
+{ ;todo move this to functions up top
+	if (WinExist(ventFact_Modificacion))
 	{
-		ControlGet, tipoIVA, Choice, , ComboBox1, Modificación
+		ControlGet, tipoIVA, Choice, , ComboBox1, %ventFact_Modificacion%
 		if (InStr(tipoIVA, "NETO GRAVADO"))
 		{
-			ControlGetText, netoPrevio, Edit1, Modificación
+			WinMove, 100, 100
+			ControlGetText, netoPrevio, Edit1, %ventFact_Modificacion%
 			ControlGetText, netoReal, Static12, %ventFactProov%
 			InputBox, totalTemp, Importe Sumado, Ingrese el importe sumado que aparece abajo a la derecha`, al lado del botón Asigna.
 			if(ErrorLevel or not IsNum(totalTemp))
@@ -1318,21 +1440,37 @@ if WinExist(ventFactProov)
 				return
 			}
 			newNeto := TextPrice2Float(netoPrevio) - TextPrice2Float(totalTemp) + TextPrice2Float(netoReal)
-			ControlFocus, Edit1, Modificación
-			ControlSetText, Edit1,, Modificación
+			ControlFocus, Edit1, %ventFact_Modificacion%
+			ControlSetText, Edit1,, %ventFact_Modificacion%
 			SendRaw, % newNeto
 			return
 		}
 	}
 
-	if (WinExist("Nuevo") or WinExist("Modificación"))
+	primeraVentFact := FirstWindowThatExists([ventFact_Modificacion, ventFact_Nuevo])
+	if (primeraVentFact)
 	{
-		ControlSend, Edit4, {Enter}, Nuevo
-		ControlSend, Edit4, {Enter}, Modificación
+		ControlGetText, factCodigo, Edit1, %primeraVentFact%
+		factCodigo := Trim(factCodigo)
+		ControlGetText, factCantidad, Edit3, %primeraVentFact%
+		StringReplace, factCantidad, factCantidad, ",", , All
+		StringReplace, factCantidad, factCantidad, " ", , All
+		factCantidad := RegExReplace(factCantidad,"(\.\d*?)0*$","$1")
+		factCantidad := RegExReplace(factCantidad,"\.$")
+		;RegExMatch(factCantidad, "([A-Z]+-\d+)", factCantidad)
+		;factCantidad := %factFantidad%%A_Tab%
+		ControlSend, Edit3, {Enter}, %primeraVentFact%
+		ControlGetText, factPrecioCosto, Edit4, %primeraVentFact%
+		ControlSend, Edit4, {Enter}, %primeraVentFact%
+		
 		WinWait, %ventModificarArticulo%
-		ControlGetText, factPrecioCosto, %campoPrecioCosto%, %ventModificarArticulo%
+		
+		ControlGetText, factNombreCompleto, %campoDescripcion%, %ventModificarArticulo%
+		factNombreCompleto := Trim(factNombreCompleto)
 		factPrecioCosto := TextPrice2Float(factPrecioCosto)
 		ApplyPriceMultipliers(factPrecioCosto)
+		factPrecioCosto := RegExReplace(factPrecioCosto,"(\.\d*?)0*$","$1")
+		factPrecioCosto := RegExReplace(factPrecioCosto,"\.$")
 		
 		ControlClick, %botonProovedoresHabituales%, %ventModificarArticulo%,,,, NA ;Clickea el boton Proveedores Habituales
 		WinWait, %ventProveedoresHabituales%, , 5
@@ -1340,7 +1478,7 @@ if WinExist(ventFactProov)
 			MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
 			return
 		}
-		ControlClick, Ver, %ventProveedoresHabituales%,,,, NA
+		ControlClick, TBTNBMP11, %ventProveedoresHabituales%,,,, NA
 		WinWait, %ventVerProveedor%, , 5
 		if ErrorLevel
 		{
@@ -1348,16 +1486,17 @@ if WinExist(ventFactProov)
 			return
 		}
 		ControlGetText, factAliasText, %campoAlias_Habituales%, %ventVerProveedor%
+		factAliasText := Trim(factAliasText)
 		ControlSend,, {Esc}, %ventVerProveedor%
 		ControlSend,, {Esc}, %ventProveedoresHabituales%
 		ControlSend, Cancela, {Space}, %ventModificarArticulo%
 		ControlFocus, TWBROWSE1, %ventFactProov%
 		ControlSend, TWBROWSE1, {PGDN}, %ventFactProov%
 		
-		finalDetailText = %factAliasText% - %factPrecioCosto%`r`n
+		finalDetailText = %factCantidad% x %factCodigo% (%factAliasText%) - %factPrecioCosto% - %factNombreCompleto%`r`n
 		LogSend(finalDetailText)
 		Sleep, 200
-		ControlClick, Button1, %ventFactProov%,,,, NA
+		ControlClick, Button5, %ventFactProov%,,,, NA
 
 	}
 	return
@@ -1372,10 +1511,14 @@ Buscar()
 return
 
 !^Launch_Mail::
-camposAClonar := ["Edit3", "Edit5", "Edit6", "ComboBox1", "ComboBox5", "Edit8", "Edit11", "Edit14", "ComboBox2", "ComboBox3", "ComboBox4"]
+WinActivate, %ventModificarArticulo%
+WinActivate, %ventNuevoArticulo%
+camposAClonar := [campoDescripcion, campoPuntoPedido, campoEmpaque, campoUnidad, campoMoneda, campoMargen1, campoMargen2, campoMargen3, campoIVA, campoRubro, campoNota]
+
+;DeepCopyControl(campoPrecioCosto, ventModificarArticulo, ventNuevoArticulo, ",")
 for i, elCampo in camposAClonar
 {
-	DeepCopyControl(elCampo, "Modifica", "Nuevo")
+	DeepCopyControl(elCampo, ventModificarArticulo, ventNuevoArticulo)
 }
 return
 
@@ -1399,10 +1542,10 @@ If(InStr(WindowUnderMouse(), ventReporteArticulos))
 Else If(InStr(WindowUnderMouse(), ventAdobeReader) or InStr(WindowUnderMouse(), ventCalc) or InStr(WindowUnderMouse(), ventWord))
 {
 	Click, 2
-	Sleep, 300
+	Sleep, 500
 	WinWait, A
 	Send {Ctrl Down}c{Ctrl Up}
-	Sleep, 100
+	Sleep, 300
 	WinWait, A
 	Send {Browser_Home}
 }
@@ -1419,6 +1562,9 @@ return
 ;return
 ;#If
 Pause::
+	shouldStop := true
+return
+Scrolllock::
 	shouldStop := true
 return
 
