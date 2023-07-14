@@ -15,13 +15,13 @@ global campoDescripcionReducida := "Edit4"
 global campoPuntoPedido := "Edit5"
 global campoEmpaque := "Edit6"
 global campoUnidad := "ComboBox1"
-global campoMoneda := "ComboBox5"
+global campoMoneda := "ComboBox2"
 global campoPrecioCosto := "Edit7"
 global campoMargen1 := "Edit8"
 global campoMargen2 := "Edit11"
 global campoMargen3:= "Edit14"
-global campoIVA := "ComboBox2"
-global campoRubro := "ComboBox3"
+global campoIVA := "ComboBox3"
+global campoRubro := "ComboBox4"
 global campoNota := "Edit17"
 
 global ventModificarProveedor := "Modificación"
@@ -32,10 +32,9 @@ global campoAlias_Habituales := "Edit2"
 global ventAliasProveedor := "Alias del Proveedor"
 global campoAlias_Dedicado := "Edit1"
 
-global ventReporteArticulos := "Artículos a Modificar"
-global ventListaArticulos := "ARTICULOS-LA CASA DEL ELECTRICISTA"
+global ventReporteArticulos := "Artículos de :"
 global campoListado := "TXBROWSE1"
-global botonModificar_Listado = "TBTNBMP35"
+global botonModificar_Listado = "TBTNBMP55"
 
 global ventNotepad := "ahk_class Notepad"
 global ventWord := " - Word"
@@ -265,6 +264,7 @@ GetAlias(parseAfter := true, checkNota := true){
 			ControlGetText, aliasText, %campoAlias_Habituales%, %ventVerProveedor%
 			
 			WinKill, %ventVerProveedor%
+			ControlClick, Salir, %ventVerProveedor%,,,, NA
 			WinKill, %ventProveedoresHabituales%
 		}
 	}
@@ -794,7 +794,11 @@ ProximoArticulo(openAfter := true)
 		
 	if(WinExist(ventModificarArticulo))
 	{
+		ControlFocus, Cancela, %ventModificarArticulo%,,,, NA
+		ControlClick, Cancela, %ventModificarArticulo%,,,, NA
+		ControlSend, Cancela, {Enter}, %ventModificarArticulo%
 		WinKill, %ventModificarArticulo%
+		WaitControlNotExist("Cancela", ventModificarArticulo)
 	}
 	ControlSend, Sí, {Enter}, Atención
 	ControlSend, Sí, {Enter}, Atención
@@ -814,7 +818,11 @@ AnteriorArticulo(openAfter := true)
 		
 	if(WinExist(ventModificarArticulo))
 	{
+		ControlFocus, Cancela, %ventModificarArticulo%,,,, NA
+		ControlClick, Cancela, %ventModificarArticulo%,,,, NA
+		ControlSend, Cancela, {Enter}, %ventModificarArticulo%
 		WinKill, %ventModificarArticulo%
+		WaitControlNotExist("Cancela", ventModificarArticulo)
 	}
 	ControlSend, %campoListado%, {Up}, %ventReporteArticulos%
 	if(openAfter)
@@ -1487,7 +1495,7 @@ if WinExist(ventFactProov)
 		}
 		ControlGetText, factAliasText, %campoAlias_Habituales%, %ventVerProveedor%
 		factAliasText := Trim(factAliasText)
-		ControlSend,, {Esc}, %ventVerProveedor%
+		ControlClick, Salir, %ventVerProveedor%,,,, NA
 		ControlSend,, {Esc}, %ventProveedoresHabituales%
 		ControlSend, Cancela, {Space}, %ventModificarArticulo%
 		ControlFocus, TWBROWSE1, %ventFactProov%
@@ -1537,7 +1545,7 @@ return
 MButton::
 If(InStr(WindowUnderMouse(), ventReporteArticulos))
 {
-	WinKill, %ventModificarArticulo%
+	ControlSend, Cancela, {Enter}, %ventModificarArticulo%
 }
 Else If(InStr(WindowUnderMouse(), ventAdobeReader) or InStr(WindowUnderMouse(), ventCalc) or InStr(WindowUnderMouse(), ventWord))
 {
