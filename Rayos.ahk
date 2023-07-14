@@ -229,20 +229,8 @@ GetAlias(parseAfter := true, checkNota := true){
 			WinKill, %ventAliasProveedor%
 		}
 		if(not WinExist(ventModificarArticulo))
-		{
-			SetControlDelay -1
-			Loop{
-				if(A_Index = 20){
-					MsgBox, GetAlias - Could not get (551) ventModificarArticulo.
-					return
-				}
-				;ControlClick, %botonModificar_Listado%, %ventReporteArticulos%,,,, NA
-				ControlSend, %botonModificar_Listado%, {Space}, %ventReporteArticulos%
-				WinWait, %ventModificarArticulo%, , 0.5
-				if not ErrorLevel {
-					Break
-				}
-			}
+		{			
+			ModificarArticulo()
 		}
 		if(not aliasText){
 			if(not WinExist(ventProveedoresHabituales))
@@ -273,13 +261,7 @@ GetAlias(parseAfter := true, checkNota := true){
 	{
 		if(not WinExist(ventModificarArticulo))
 		{
-			;ControlClick, %botonModificar_Listado%, %ventReporteArticulos%,,,, NA
-			ControlSend, %botonModificar_Listado%, {Space}, %ventReporteArticulos%
-			WinWait, %ventModificarArticulo%, , 5
-			if ErrorLevel {
-				MsgBox, GetAlias - Could not cometh here ventModificarArticulo.
-				return
-			}
+			ModificarArticulo()
 		}
 		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
 		RegExMatch(notaAdicional, "im).*(?:Alias completo|Alias|Simil):[ ]+(.*)$", aliasReplacement)
@@ -645,12 +627,7 @@ PastePrice(newPrice := 0){
 	
 	if(not WinExist(ventModificarArticulo))
 	{
-		ControlSend, Modifica, {Space}, %ventReporteArticulos%
-		WinWait, %ventModificarArticulo%, , 5
-		if ErrorLevel {
-			MsgBox, PastePrice - Could not bring forth ventModificarArticulo.
-			return
-		}
+		ModificarArticulo()
 	}
 	
 	ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
@@ -697,12 +674,7 @@ PastePrice(newPrice := 0){
 SetMargins(margin1, margin2, margin3, fast := false){
 	if(not WinExist(ventModificarArticulo))
 	{
-		ControlSend, Modifica, {Space}, %ventReporteArticulos%
-		WinWait, %ventModificarArticulo%, , 5
-		if ErrorLevel {
-			MsgBox, PastePrice - Could not special summon ventModificarArticulo.
-			return
-		}
+		ModificarArticulo()
 	}
 	
 	ControlFocus, %campoMargen1%, %ventModificarArticulo%
@@ -733,12 +705,7 @@ SetMargins(margin1, margin2, margin3, fast := false){
 FastSetRubro(rubro){
 	if(not WinExist(ventModificarArticulo))
 	{
-		ControlSend, Modifica, {Space}, %ventReporteArticulos%
-		WinWait, %ventModificarArticulo%, , 5
-		if ErrorLevel {
-			MsgBox, PastePrice - Could not blueprint construct ventModificarArticulo.
-			return
-		}
+		ModificarArticulo()
 	}
 	
 	ControlFocus, %campoRubro%, %ventModificarArticulo%,,,, NA
@@ -805,7 +772,7 @@ ProximoArticulo(openAfter := true)
 	ControlSend, %campoListado%, {Down}, %ventReporteArticulos%
 	if(openAfter)
 	{
-		ControlClick, Modifica, %ventReporteArticulos%,,,, NA
+		ModificarArticulo()
 	}
 }
 
@@ -827,7 +794,28 @@ AnteriorArticulo(openAfter := true)
 	ControlSend, %campoListado%, {Up}, %ventReporteArticulos%
 	if(openAfter)
 	{
-		ControlClick, Modifica, %ventReporteArticulos%,,,, NA
+		ModificarArticulo()
+	}
+}
+
+ModificarArticulo(){
+	Sleep, 200
+	
+	ControlFocus, %botonModificar_Listado%, %ventReporteArticulos%
+	Sleep, 200
+	ControlClick, %botonModificar_Listado%, %ventReporteArticulos%
+	;ControlSend, %botonModificar_Listado%, ^M, %ventReporteArticulos%
+	Loop{
+		if(A_Index = 350){
+			MsgBox, GetAlias - Could not get (551) ventModificarArticulo.
+			return
+		}
+		;ControlClick, %botonModificar_Listado%, %ventReporteArticulos%,,,, NA
+		;ControlSend, %botonModificar_Listado%, {Space}, %ventReporteArticulos%
+		WinWait, %ventModificarArticulo%, , 0.5
+		if not ErrorLevel {
+			Break
+		}
 	}
 }
 ;}
