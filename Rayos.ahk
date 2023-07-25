@@ -51,23 +51,6 @@ global ventFactProov := "FACTURA  Proveedor.Nueva" ;sic
 global ventFact_Nuevo := "Nuevo"
 global ventFact_Modificacion := "Modificación"
 
-global search_Default = "Default"
-global search_Exact = "Exact"
-global search_Start = "Match Start"
-global search_End = "Match End"
-global search_WordBoundaries = "Match Word Boundaries"
-global search_RemoveLastWord = "Remove Last Word"
-global search_RemoveColors = "Remove Colors"
-global search_RemoveLetters = "Remove Letters"
-global search_LongestNumber = "Longest Number"
-global search_LongestWord = "Longest Word"
-global search_RemoveZeroes = "Remove ALL Trailing Zeroes"
-global search_Fabrimport = "Fabrimport"
-global search_Faroluz = "Faroluz"
-global search_Ferrolux = "Ferrolux"
-global search_Solnic = "Solnic"
-global searchType := "Default"
-
 global suppressWarnings := false
 global autoPilot := false
 global forceSeek := false
@@ -85,6 +68,8 @@ global working := false
 global shouldStop := false
 
 global lastSeekCol := ""
+
+global searchTypes := []
 ;}
 
 ;{ Ventana Lista Artículos
@@ -144,6 +129,147 @@ Multiplier2Percent(multiplier){
 ;}
 
 ;{ Alias
+toggleSearchType(name) {
+    for index, searchType in searchTypes {
+        if (searchType.name == name) {
+            searchType.active := !searchType.active
+			break
+        }
+    }
+    refreshSearchTypeMenu()
+	
+	/*
+	if(!initial)
+	{
+		if(type != search_Default)
+		{
+			RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType, %type%		
+		}
+		else
+		{
+			RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
+		}
+	}
+	*/
+}
+
+refreshSearchTypeMenu() {
+    for index, searchType in searchTypes {
+        if (searchType.active) {
+            Menu, searchTypeMenu, Check, % searchType.name
+        } else {
+            Menu, searchTypeMenu, Uncheck, % searchType.name
+        }
+    }
+}
+
+createSearchType(name, function) {
+    searchType := {name: name, function: function, active: false}
+    searchTypes.Push(searchType)
+	function := Func("toggleSearchType").Bind(searchType.name)
+    Menu, searchTypeMenu, Add, % searchType.name, % function
+}
+
+executeSearchTypes(alias) {
+    for index, searchType in searchTypes {
+        if (searchType.active) {
+			functionName := searchType.function
+            alias := Func(functionName).Call(alias)
+        }
+    }
+    return alias
+}
+
+
+doSearch_Exact(alias){
+    return "^ " . alias . "$"
+}
+createSearchType("Exact", "doSearch_Exact")
+
+doSearch_Start(alias){
+    return "^ " . alias
+}
+createSearchType("Start", "doSearch_Start")
+
+doSearch_End(alias){
+    return alias . "$"
+}
+createSearchType("End", "doSearch_End")
+
+doSearch_WordBoundaries(alias){
+    return "\b" . alias . "\b"
+}
+createSearchType("Word Boundaries", "doSearch_WordBoundaries")
+
+doSearch_RemoveLastWord(alias){
+    return RegExReplace(alias, " \w+$", "")
+}
+createSearchType("Remove Last Word", "doSearch_RemoveLastWord")
+
+doSearch_RemoveColors(alias){
+    alias := RegExReplace(alias, "[A-Za-z]", "")
+    return RegExReplace(alias, "\/$", "")
+}
+createSearchType("Remove Colors", "doSearch_RemoveColors")
+
+doSearch_RemoveLetters(alias){
+    return RegExReplace(alias, "[A-Za-z]", "")
+}
+createSearchType("Remove Letters", "doSearch_RemoveLetters")
+
+doSearch_LongestNumber(alias){
+    longestMatch := ""
+    for index, match in AllRegexMatches(alias, "[\d]+"){
+        if(StrLen(match) > StrLen(longestMatch)){
+            longestMatch := match
+        }
+    }
+    return longestMatch
+}
+createSearchType("Longest Number", "doSearch_LongestNumber")
+
+doSearch_LongestWord(alias){
+    longestMatch := ""
+    for index, match in AllRegexMatches(alias, "[\w]+"){
+        if(StrLen(match) > StrLen(longestMatch)){
+            longestMatch := match
+        }
+    }
+    return "\b" . longestMatch . "\b"
+}
+createSearchType("Longest Word", "doSearch_LongestWord")
+
+doSearch_RemoveZeroes(alias){
+    return RegExReplace(alias, "^[0]+", "")
+}
+createSearchType("Remove Zeroes", "doSearch_RemoveZeroes")
+
+doSearch_Fabrimport(alias){
+    return "[^0-9]" . alias . "$"
+}
+createSearchType("Fabrimport", "doSearch_Fabrimport")
+
+doSearch_Faroluz(alias){
+    return RegExReplace(alias, " \w+$", "") . "$"
+}
+createSearchType("Faroluz", "doSearch_Faroluz")
+
+doSearch_Ferrolux(alias){
+    newAlias := alias
+    RegExMatch(alias, "([A-Z]+-\d+(\/\d+)?)", newAlias)
+    if WinExist(ventCalc)
+    {
+        return "^ " . newAlias
+    } 
+    return newAlias
+}
+createSearchType("Ferrolux", "doSearch_Ferrolux")
+
+doSearch_Solnic(alias){
+    return "^" . alias . "[\s+|$]"
+}
+createSearchType("Solnic", "doSearch_Solnic")
+
 ParseAlias(alias){
 	alias := RegExReplace(alias, "^0") ;Remove leading zero.
 	alias := RegExReplace(alias, "[ \t]+$") ;Remove trailing whitespace.	
@@ -152,65 +278,7 @@ ParseAlias(alias){
 		return "NEXT!"
 	}
 	
-	if(searchType == search_Exact){
-		alias := "^ " . alias . "$"
-	}
-	else if(searchType == search_Start){
-		alias := "^ " . alias
-	}
-	else if(searchType == search_End){
-		alias := alias . "$"
-	}
-	else if(searchType == search_WordBoundaries){
-		alias := "\b" . alias . "\b"
-	}
-	else if(searchType == search_RemoveLastWord){
-		alias := RegExReplace(alias, " \w+$", "")
-	}
-	else if(searchType == search_RemoveColors){
-		alias := RegExReplace(alias, "[A-Za-z]", "")
-		alias := RegExReplace(alias, "\/$", "")
-	}
-	else if(searchType == search_RemoveLetters){
-		alias := RegExReplace(alias, "[A-Za-z]", "")
-	}
-	else if(searchType == search_LongestNumber){
-		longestMatch := ""
-		for index, match in AllRegexMatches(alias, "[\d]+"){
-			if(StrLen(match) > StrLen(longestMatch)){
-				longestMatch := match
-			}
-		}
-		alias := longestMatch
-	}
-	else if(searchType == search_longestWord){
-		longestMatch := ""
-		for index, match in AllRegexMatches(alias, "[\w]+"){
-			if(StrLen(match) > StrLen(longestMatch)){
-				longestMatch := match
-			}
-		}
-		alias := "\b" . longestMatch . "\b"
-	}
-	else if(searchType == search_removeZeroes){
-		alias := RegExReplace(alias, "^[0]+", "")
-	}
-	else if(searchType == search_Fabrimport){
-		alias := "[^0-9]" . alias . "$"
-	}
-	else if(searchType == search_Faroluz){
-		alias := RegExReplace(alias, " \w+$", "") . "$"
-	}
-	else if(searchType == search_Ferrolux){
-		RegExMatch(alias, "([A-Z]+-\d+(\/\d+)?)", alias)
-		if WinExist(ventCalc)
-		{
-			alias := "^ " . alias
-		} 
-	}
-	else if(searchType == search_Solnic){
-		alias := "^" . alias . "[\s+|$]"
-	}
+	alias = % executeSearchTypes(alias)
 	
 	return alias
 }
@@ -875,102 +943,6 @@ SetPostSearchString(searchStringInput := "", displayMessage := true)
 
 
 Menu, Tray, Add  ; Add a separator line.
-;{
-Menu, searchTypeMenu, Add, %search_Default%, setSearchDefault, Radio
-setSearchDefault(){
-    setSearchType(search_Default)
-}
-Menu, searchTypeMenu, Add, %search_Exact%, setSearchExact, Radio
-setSearchExact(){
-    setSearchType(search_Exact)
-}
-Menu, searchTypeMenu, Add, %search_Start%, setSearchStart, Radio
-setSearchStart(){
-    setSearchType(search_Start)
-}
-Menu, searchTypeMenu, Add, %search_End%, setSearchEnd, Radio
-setSearchEnd(){
-    setSearchType(search_End)
-}
-Menu, searchTypeMenu, Add, %search_wordBoundaries%, setSearchWordBoundaries, Radio
-setSearchWordBoundaries(){
-    setSearchType(search_wordBoundaries)
-}
-Menu, searchTypeMenu, Add, %search_RemoveLastWord%, setSearchRemoveLastWord, Radio
-setSearchRemoveLastWord(){
-    setSearchType(search_RemoveLastWord)
-}
-Menu, searchTypeMenu, Add, %search_RemoveColors%, setSearchRemoveColors, Radio
-setSearchRemoveColors(){
-    setSearchType(search_RemoveColors)
-}
-Menu, searchTypeMenu, Add, %search_RemoveLetters%, setSearchRemoveLetters, Radio
-setSearchRemoveLetters(){
-    setSearchType(search_RemoveLetters)
-}
-Menu, searchTypeMenu, Add, %search_LongestNumber%, setSearchLongestNumber, Radio
-setSearchLongestNumber(){
-    setSearchType(search_LongestNumber)
-}
-Menu, searchTypeMenu, Add, %search_LongestWord%, setSearchLongestWord, Radio
-setSearchLongestWord(){
-    setSearchType(search_LongestWord)
-}
-Menu, searchTypeMenu, Add, %search_removeZeroes%, setSearchRemoveZeroes, Radio
-setSearchRemoveZeroes(){
-    setSearchType(search_removeZeroes)
-}
-Menu, searchTypeMenu, Add, %search_Fabrimport%, setSearchFabrimport, Radio
-setSearchFabrimport(){
-    setSearchType(search_Fabrimport)
-}
-Menu, searchTypeMenu, Add, %search_Faroluz%, setSearchFaroluz, Radio
-setSearchFaroluz(){
-    setSearchType(search_Faroluz)
-}
-Menu, searchTypeMenu, Add, %search_Ferrolux%, setSearchFerrolux, Radio
-setSearchFerrolux(){
-    setSearchType(search_Ferrolux)
-}
-Menu, searchTypeMenu, Add, %search_Solnic%, setSearchSolnic, Radio
-setSearchSolnic(){
-    setSearchType(search_Solnic)
-}
-;}
-setSearchType(search_Default, true)
-
-setSearchType(type, initial := false){
-    searchType := type
-    
-    Menu, searchTypeMenu, Uncheck, %search_Default%
-    Menu, searchTypeMenu, Uncheck, %search_Exact%
-    Menu, searchTypeMenu, Uncheck, %search_Start%
-    Menu, searchTypeMenu, Uncheck, %search_End%
-	Menu, searchTypeMenu, Uncheck, %search_WordBoundaries%
-    Menu, searchTypeMenu, Uncheck, %search_RemoveLastWord%
-	Menu, searchTypeMenu, Uncheck, %search_RemoveColors%
-	Menu, searchTypeMenu, Uncheck, %search_RemoveLetters%
-    Menu, searchTypeMenu, Uncheck, %search_LongestNumber%
-	Menu, searchTypeMenu, Uncheck, %search_LongestWord%
-	Menu, searchTypeMenu, Uncheck, %search_RemoveZeroes%
-    Menu, searchTypeMenu, Uncheck, %search_Fabrimport%
-    Menu, searchTypeMenu, Uncheck, %search_Faroluz%
-    Menu, searchTypeMenu, Uncheck, %search_Ferrolux%
-    Menu, searchTypeMenu, Uncheck, %search_Solnic%
-    Menu, searchTypeMenu, Check, %type%
-	
-	if(!initial)
-	{
-		if(type != search_Default)
-		{
-			RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType, %type%		
-		}
-		else
-		{
-			RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
-		}
-	}
-}
 
 ; Create a submenu in the first menu (a right-arrow indicator). When the user selects it, the second menu is displayed.
 Menu, Tray, Add, Search Type, :searchTypeMenu
@@ -1342,10 +1314,12 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 		{
 			SetPostSearchString(savedPostSearchString, false)
 		}
+		/* todo
 		if(savedSearchType)
 		{
 			setSearchType(savedSearchType)
 		}
+		*/
 		if(savedSuppressWarnings)
 		{
 			toggleSuppressWarnings()
