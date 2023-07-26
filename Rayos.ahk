@@ -136,21 +136,16 @@ toggleSearchType(name) {
 			break
         }
     }
-    refreshSearchTypeMenu()
-	
-	/*
-	if(!initial)
-	{
-		if(type != search_Default)
-		{
-			RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType, %type%		
-		}
-		else
-		{
-			RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
-		}
+    
+	activeSearchTypesStr := ""
+	for index, searchType in searchTypes {
+		if (searchType.active)
+			activeSearchTypesStr .= searchType.name . "`n"
 	}
-	*/
+	; Write the active search types to the registry as REG_MULTI_SZ
+	RegWrite, REG_MULTI_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchTypes, %activeSearchTypesStr%
+	
+	refreshSearchTypeMenu()
 }
 
 refreshSearchTypeMenu() {
@@ -1270,11 +1265,11 @@ MakePropertyValue(poSM, cName, uValue)
 ;{ AUTOEXEC
 RegRead, savedModificadores, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedModificadores
 RegRead, savedPostSearchString, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedPostSearchString
-RegRead, savedSearchType, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
+RegRead, savedSearchTypes, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchTypes
 RegRead, savedSuppressWarnings, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings
 RegRead, savedSkipOnSearch, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch
 RegRead, savedForceSeek, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedForceSeek
-if(savedModificadores or savedPostSearchString or savedSearchType)
+if(savedModificadores or savedPostSearchString or savedSearchTypes or savedSuppressWarnings or savedSkipOnSearch or savedForceSeek)
 {
 	explanationConfig := "Saved config:"
 	if(savedModificadores)
@@ -1285,9 +1280,10 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 	{
 		explanationConfig = %explanationConfig%`nPost-Search String: %savedPostSearchString%
 	}
-	if(savedSearchType)
+	if(savedSearchTypes)
 	{
-		explanationConfig = %explanationConfig%`nSearch Type: %savedSearchType%
+		stringWithNoLinebreaks := RTrim(StrReplace(savedSearchTypes, "`n", ", "), ", ")
+		explanationConfig = %explanationConfig%`nActive Search Types: %stringWithNoLinebreaks%
 	}
 	if(savedSuppressWarnings)
 	{
@@ -1314,12 +1310,16 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 		{
 			SetPostSearchString(savedPostSearchString, false)
 		}
-		/* todo
-		if(savedSearchType)
+		if(savedSearchTypes)
 		{
-			setSearchType(savedSearchType)
+			for i, currSearchType in searchTypes {
+				if InStr(savedSearchTypes, currSearchType.name . "`n")
+					currSearchType.active := true
+				else
+					currSearchType.active := false
+			}
+			refreshSearchTypeMenu()
 		}
-		*/
 		if(savedSuppressWarnings)
 		{
 			toggleSuppressWarnings()
@@ -1337,7 +1337,7 @@ if(savedModificadores or savedPostSearchString or savedSearchType)
 	{
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedModificadores
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedPostSearchString
-		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchType
+		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchTypes
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSuppressWarnings
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSkipOnSearch
 		RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedForceSeek
