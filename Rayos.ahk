@@ -148,6 +148,13 @@ toggleSearchType(name) {
 	refreshSearchTypeMenu()
 }
 
+DeactivateAllSearchTypes() {
+    for index_deactsearchtypes, searchType_deactsearchtypes in searchTypes {
+        searchType_deactsearchtypes.active := false
+    }
+	refreshSearchTypeMenu()
+}
+
 refreshSearchTypeMenu() {
     for index, searchType in searchTypes {
         if (searchType.active) {
@@ -941,6 +948,7 @@ Menu, Tray, Add  ; Add a separator line.
 
 ; Create a submenu in the first menu (a right-arrow indicator). When the user selects it, the second menu is displayed.
 Menu, Tray, Add, Search Type, :searchTypeMenu
+Menu, searchTypeMenu, Add, Deactivate All, DeactivateAllSearchTypes
 
 Menu, Tray, Add  ; Add a separator line.
 
