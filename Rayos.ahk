@@ -272,6 +272,11 @@ doSearch_Solnic(alias){
 }
 createSearchType("Solnic", "doSearch_Solnic")
 
+doSearch_WhitespaceOptional(alias){
+    return RegExReplace(alias, "\s+", "\s*")
+}
+createSearchType("Whitespace Optional", "doSearch_WhitespaceOptional")
+
 ParseAlias(alias){
 	alias := RegExReplace(alias, "^0") ;Remove leading zero.
 	alias := RegExReplace(alias, "[ \t]+$") ;Remove trailing whitespace.	
