@@ -8,7 +8,7 @@ SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 #Include modules\searchTypes.ahk ; Defines search types
 
 ;{ Globals (most of these are effectively defines)
-global ventModificarArticulo := "Modificación :"
+global ventModificarArticulo := "Modificación : ahk_exe LUPA.exe"
 global ventNuevoArticulo := "Nuevo"
 global campoCodigo := "Edit1"
 global campoCodBarras := "Edit2"
@@ -43,8 +43,8 @@ global ventWord := " - Word"
 global ventCalc := "OpenOffice Calc"
 global ventCalc_Buscar := "Find & Replace"
 global ventCalc_Main := "ahk_class SALFRAME" ;Precisamente la planilla principal, no ningún diálogo
-global ventAdobeReader := "Adobe Acrobat Reader"
-global ventAdobeReader_Buscar := "ahk_class AVL_AVWindow"
+global ventAdobeReader := "Adobe Acrobat"
+global ventAdobeReader_Buscar := "ahk_class AVL_AVView41"
 global ventAdobeReader_BuscarOK := "Button18"
 global ventAdobeReader_Buscar_Input := "Edit5"
 global ventAbodeReader_Buscar_Matches := "Static12"
@@ -514,9 +514,6 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 			}
 		}
 		precioAdicional := preciosGuardados[preciosAdicionales1]
-		;if(newPrice * 10 < precioAdicional){ ;FUCK THOUSANDS SEPARATORS
-		;	precioAdicional := precioAdicional / 1000
-		;}
 		precioAdicionalString := " +" . precioAdicional
 		newPrice := newPrice + precioAdicional
 	}
