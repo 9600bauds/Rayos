@@ -8,50 +8,56 @@ SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 #Include modules\searchTypes.ahk ; Defines search types
 
 ;{ Globals (most of these are effectively defines)
-global ventModificarArticulo := "Modificación : ahk_exe LUPA.exe"
-global ventNuevoArticulo := "Nuevo"
-global campoCodigo := "Edit1"
-global campoCodBarras := "Edit2"
-global campoDescripcion := "Edit3"
-global campoDescripcionReducida := "Edit4"
-global campoPuntoPedido := "Edit5"
-global campoEmpaque := "Edit6"
-global campoUnidad := "ComboBox1"
-global campoMoneda := "ComboBox2"
-global campoPrecioCosto := "Edit7"
-global campoMargen1 := "Edit8"
-global campoMargen2 := "Edit11"
-global campoMargen3:= "Edit14"
-global campoIVA := "ComboBox3"
-global campoRubro := "ComboBox4"
-global campoNota := "Edit17"
+global vModifArticulo_id := "Modificación : ahk_exe LUPA.exe"
+global vNuevoArticulo_id := "Nuevo"
+global vModifArticulo_codigo := "Edit1"
+global vModifArticulo_codigoBarras := "Edit2"
+global vModifArticulo_descripcion := "Edit3"
+global vModifArticulo_descripcionReducida := "Edit4"
+global vModifArticulo_puntoPedido := "Edit5"
+global vModifArticulo_empaque := "Edit6"
+global vModifArticulo_unidad := "ComboBox1"
+global vModifArticulo_moneda := "ComboBox2"
+global vModifArticulo_precioCosto := "Edit7"
+global vModifArticulo_margen1 := "Edit8"
+global vModifArticulo_margen2 := "Edit11"
+global vModifArticulo_margen3:= "Edit14"
+global vModifArticulo_iva := "ComboBox3"
+global vModifArticulo_rubro := "ComboBox4"
+global vModifArticulo_nota := "Edit17"
 
-global ventModificarProveedor := "Modificación"
-global ventVerProveedor := "Consulta"
-global ventProveedoresHabituales := "Proveedores Habituales"
-global botonProovedoresHabituales := "Button17"
-global campoAlias_Habituales := "Edit2"
-global ventAliasProveedor := "Alias del Proveedor"
-global campoAlias_Dedicado := "Edit1"
+global vModifProovedor_id := "Modificación"
 
-global ventReporteArticulos := "Artículos de :"
-global campoListado := "TXBROWSE1"
-global botonModificar_Listado = "TBTNBMP55"
+global vVerProovedorHabitual_id := "Consulta"
+global vVerProovedorHabitual_numProovedor := "Edit1"
+global vVerProovedorHabitual_alias := "Edit2"
 
-global ventNotepad := "ahk_class Notepad"
-global ventWord := " - Word"
-global ventCalc := "OpenOffice Calc"
-global ventCalc_Buscar := "Find & Replace"
-global ventCalc_Main := "ahk_class SALFRAME" ;Precisamente la planilla principal, no ningún diálogo
-global ventAdobeReader := "Adobe Acrobat"
-global ventAdobeReader_Buscar := "ahk_class AVL_AVView41"
-global ventAdobeReader_BuscarOK := "Button18"
-global ventAdobeReader_Buscar_Input := "Edit5"
-global ventAbodeReader_Buscar_Matches := "Static12"
+global vProovedoresHabituales_id := "Proveedores Habituales"
 
-global ventFactProov := "FACTURA  Proveedor.Nueva" ;sic
-global ventFact_Nuevo := "Nuevo"
-global ventFact_Modificacion := "Modificación"
+
+global vMiniAliasProovedor_id := "Alias del Proveedor"
+global vMiniAliasProovedor_alias := "Edit1"
+
+global vReporteArticulos_id := "Artículos de :"
+global vReporteArticulos_proovedoresHabituales := "Button17"
+
+global vReporteArticulos_planilla := "TXBROWSE1"
+global vReporteArticulos_modificar = "TBTNBMP55"
+
+global vNotepad_id := "ahk_class Notepad"
+global vWord_id := " - Word"
+global vCalc_id := "OpenOffice Calc"
+global vCalc_buscar := "Find & Replace"
+global vCalc_main := "ahk_class SALFRAME" ;Precisamente la planilla principal, no ningún diálogo
+global vAdobe_id := "Adobe Acrobat"
+global vAdobeBuscar_id := "ahk_class AVL_AVView41"
+global vAdobeBuscar_ok := "Button18"
+global vAdobeBuscar_input := "Edit5"
+global vAdobeBuscar_resultados := "Static12"
+
+global vFacturaProov_id := "FACTURA  Proveedor.Nueva" ;sic
+global vFacturaProovNuevo_id := "Nuevo"
+global vFacturaProovModif_id := "Modificación"
 
 global suppressWarnings := false
 global autoPilot := false
@@ -145,48 +151,48 @@ GetAlias(parseAfter := true, checkNota := true){
 	}
 		
 	aliasText := ""
-	if(WinExist(ventReporteArticulos))
+	if(WinExist(vReporteArticulos_id))
 	{
-		if(WinExist(ventAliasProveedor)){
-			ControlGetText, aliasText, %campoAlias_Dedicado%, %ventAliasProveedor%
-			WinKill, %ventAliasProveedor%
+		if(WinExist(vMiniAliasProovedor_id)){
+			ControlGetText, aliasText, %vMiniAliasProovedor_alias%, %vMiniAliasProovedor_id%
+			WinKill, %vMiniAliasProovedor_id%
 		}
-		if(not WinExist(ventModificarArticulo))
+		if(not WinExist(vModifArticulo_id))
 		{			
 			ModificarArticulo()
 		}
 		if(not aliasText){
-			if(not WinExist(ventProveedoresHabituales))
+			if(not WinExist(vProovedoresHabituales_id))
 			{
-				ControlClick, %botonProovedoresHabituales%, %ventModificarArticulo%,,,, NA ;Clickea el boton Proveedores Habituales
-				WinWait, %ventProveedoresHabituales%, , 5
+				ControlClick, %vReporteArticulos_proovedoresHabituales%, %vModifArticulo_id%,,,, NA ;Clickea el boton Proveedores Habituales
+				WinWait, %vProovedoresHabituales_id%, , 5
 				if ErrorLevel {
-					MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
+					MsgBox, GetAlias - Could not rouse vProovedoresHabituales_id from the dead.
 					return
 				}
-				ControlClick, TBTNBMP11, %ventProveedoresHabituales%,,,, NA
-				WinWait, %ventVerProveedor%, , 5
+				ControlClick, TBTNBMP11, %vProovedoresHabituales_id%,,,, NA
+				WinWait, %vVerProovedorHabitual_id%, , 5
 				if ErrorLevel
 				{
-					MsgBox, GetAlias - Could not summon ventModificarProveedor to this mortal coil.
+					MsgBox, GetAlias - Could not summon vModifProovedor_id to this mortal coil.
 					return
 				}
 			}
-			ControlGetText, aliasText, %campoAlias_Habituales%, %ventVerProveedor%
+			ControlGetText, aliasText, %vVerProovedorHabitual_alias%, %vVerProovedorHabitual_id%
 			
-			WinKill, %ventVerProveedor%
-			ControlClick, Salir, %ventVerProveedor%,,,, NA
-			WinKill, %ventProveedoresHabituales%
+			WinKill, %vVerProovedorHabitual_id%
+			ControlClick, Salir, %vVerProovedorHabitual_id%,,,, NA
+			WinKill, %vProovedoresHabituales_id%
 		}
 	}
 	
 	if(checkNota)
 	{
-		if(not WinExist(ventModificarArticulo))
+		if(not WinExist(vModifArticulo_id))
 		{
 			ModificarArticulo()
 		}
-		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+		ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 		RegExMatch(notaAdicional, "im).*(?:Alias completo|Alias|Simil):[ ]+(.*)$", aliasReplacement)
 		if(aliasReplacement1)
 		{
@@ -205,10 +211,10 @@ FastSetAlias(thealias := ""){
 		Send {Ctrl Down}c{Ctrl Up}
 		Sleep, 100
 		thealias := Clipboard
-	ControlClick, TBTNBMP29, %ventReporteArticulos%
-	WinWait, %ventAliasProveedor%
-	WinActivate, %ventAliasProveedor%
-	ControlFocus, Edit1, %ventAliasProveedor%
+	ControlClick, TBTNBMP29, %vReporteArticulos_id%
+	WinWait, %vMiniAliasProovedor_id%
+	WinActivate, %vMiniAliasProovedor_id%
+	ControlFocus, Edit1, %vMiniAliasProovedor_id%
 	Send, {Shift Down}{End}{Shift Up}
 	thealias := "0" . thealias
 	Sleep, 100
@@ -221,13 +227,13 @@ FastSetAlias(thealias := ""){
 
 FastAliasizeDesc(){
 	myAlias := GetAlias()
-	ControlFocus, %campoDescripcion%, %ventModificarArticulo%
+	ControlFocus, %vModifArticulo_descripcion%, %vModifArticulo_id%
 	Sleep, 300
-	ControlSend, %campoDescripcion%, {End}{Space}, %ventModificarArticulo%
-	Control, EditPaste, %myAlias%, %campoDescripcion%, %ventModificarArticulo%
+	ControlSend, %vModifArticulo_descripcion%, {End}{Space}, %vModifArticulo_id%
+	Control, EditPaste, %myAlias%, %vModifArticulo_descripcion%, %vModifArticulo_id%
 	Sleep, 300
-	ControlFocus, Ok, %ventModificarArticulo%,,,, NA
-	ControlClick, Ok, %ventModificarArticulo%,,,, NA
+	ControlFocus, Ok, %vModifArticulo_id%,,,, NA
+	ControlClick, Ok, %vModifArticulo_id%,,,, NA
 }
 
 ;}
@@ -250,24 +256,24 @@ Buscar(){
 		return
 	}
 	
-	if WinExist(ventCalc)
+	if WinExist(vCalc_id)
 	{
-        WinActivate, %ventCalc%
-        WinWait, %ventCalc%
+        WinActivate, %vCalc_id%
+        WinWait, %vCalc_id%
 		
-        if WinExist(ventCalc_Buscar)
+        if WinExist(vCalc_buscar)
 		{
-            WinActivate, %ventCalc_Buscar%
-            WinWait, %ventCalc_Buscar%
+            WinActivate, %vCalc_buscar%
+            WinWait, %vCalc_buscar%
             Send, !s ;Alt+S: Search For
         }
         else
 		{
             Send, ^f ;Ctrl+F: Buscar
         }
-        WinWait, %ventCalc_Buscar%
+        WinWait, %vCalc_buscar%
 		
-        WinGet, ventBuscarID, ID, %ventCalc_Buscar%
+        WinGet, ventBuscarID, ID, %vCalc_buscar%
 		curCoords := Calc_GetSelectedCoords()
 		
         SendRaw, % alias
@@ -310,40 +316,40 @@ Buscar(){
 		OnUnsuccessfulSearch()
 		return 0
     }
-	else if WinExist(ventAdobeReader_Buscar)
+	else if WinExist(vAdobeBuscar_id)
 	{
-		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+		ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 		RegExMatch(notaAdicional, "im).*Pagina:[ ]+(.*)$", pageOverrides)
 		if(pageOverrides1)
 		{
-			WinActivate, %ventAdobeReader%
-			WinWait, %ventAdobeReader%
+			WinActivate, %vAdobe_id%
+			WinWait, %vAdobe_id%
 			Send, ^+n ;Ctrl+Shift+N: Go To Page
 			Send, %pageOverrides1%{Enter}
 			return
 		}
 		
-        WinActivate, %ventAdobeReader_Buscar%
-        WinWait, %ventAdobeReader_Buscar%
-        ControlClick, %ventAdobeReader_BuscarOK%, %ventAdobeReader_Buscar%
-        WinWait, %ventAdobeReader_Buscar%
-        ControlFocus, %ventAdobeReader_Buscar_Input%, %ventAdobeReader_Buscar%
-		ControlSetText, %ventAdobeReader_Buscar_Input%,, %ventAdobeReader_Buscar%
+        WinActivate, %vAdobeBuscar_id%
+        WinWait, %vAdobeBuscar_id%
+        ControlClick, %vAdobeBuscar_ok%, %vAdobeBuscar_id%
+        WinWait, %vAdobeBuscar_id%
+        ControlFocus, %vAdobeBuscar_input%, %vAdobeBuscar_id%
+		ControlSetText, %vAdobeBuscar_input%,, %vAdobeBuscar_id%
 		SendRaw, % alias
 		Send, {Enter}
 		
-		WinWait, %ventAdobeReader_Buscar%
-		WaitControlNotExist("Stop", ventAdobeReader_Buscar)
-		WaitControlExist("Nueva búsqueda", ventAdobeReader_Buscar)
-        WinWait, %ventAdobeReader_Buscar%
+		WinWait, %vAdobeBuscar_id%
+		WaitControlNotExist("Stop", vAdobeBuscar_id)
+		WaitControlExist("Nueva búsqueda", vAdobeBuscar_id)
+        WinWait, %vAdobeBuscar_id%
 		
-        ControlGetText, resultsText, %ventAbodeReader_Buscar_Matches%, %ventAdobeReader_Buscar%
+        ControlGetText, resultsText, %vAdobeBuscar_resultados%, %vAdobeBuscar_id%
         if(InStr(resultsText, "0 doc")){
             OnUnsuccessfulSearch()
             return 0
         }
 		else if(InStr(resultsText, "1 instanc")){
-			ControlClick, AVSearchTreeDocItemView, %ventAdobeReader_Buscar%
+			ControlClick, AVSearchTreeDocItemView, %vAdobeBuscar_id%
             OnSuccessfulSearch()
             return 1
         }
@@ -352,20 +358,20 @@ Buscar(){
             return 1
         }
     }
-	else if WinExist(ventAdobeReader)
+	else if WinExist(vAdobe_id)
 	{
-        WinActivate, %ventAdobeReader%
-        WinWait, %ventAdobeReader%
+        WinActivate, %vAdobe_id%
+        WinWait, %vAdobe_id%
         Send, ^f ;Ctrl+F: Buscar
         Sleep, 100
 		SendRaw, % alias
 		Send, {Enter}
         return 1
     }
-	else if WinExist(ventWord)
+	else if WinExist(vWord_id)
 	{
-        WinActivate, %ventWord%
-        WinWait, %ventWord%
+        WinActivate, %vWord_id%
+        WinWait, %vWord_id%
         Send, ^b ;Ctrl+B: Buscar
         Sleep, 100
 		SendRaw, % alias
@@ -396,7 +402,7 @@ OnSuccessfulSearch(){
 		return
 	}
 	
-	ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+	ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 	RegExMatch(notaAdicional, "im).*Tooltip:[ ]+(.*)$", tooltips)
 	if(tooltips1)
 	{
@@ -404,22 +410,22 @@ OnSuccessfulSearch(){
 		SetTimer, RemoveToolTip, -1500
 	}
 
-	if WinExist(ventCalc)
+	if WinExist(vCalc_id)
 	{
-		WinActivate, %ventCalc_Main%
+		WinActivate, %vCalc_main%
 		
 		for index, match in AllRegexMatches(PostSearchString, "{[^{}]+}")
 		{
 			if(match == "{Seek}"){
-				ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
+				ControlGetText, oldPrice, %vModifArticulo_precioCosto%, %vModifArticulo_id%
 				oldPrice := TextPrice2Float(oldPrice)
-				ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+				ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 				
 				RegExMatch(notaAdicional, "im).*Seek:[ ]+(.*)$", seekOverride)
 				
 				if(not seekOverride1 and forceSeek and Calc_IsInMergedCell())
 				{
-					ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+					ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 					InputBox, tempSeekInput, Nuevo Seek..., Ingrese el nuevo Seek.,,,,,,,,{End}{Left 2}
 					if(ErrorLevel)
 					{
@@ -429,8 +435,8 @@ OnSuccessfulSearch(){
 					else
 					{
 						finalNota := "Seek: " . tempSeekInput . "`n" . notaAdicional
-						WinActivate, %ventModificarArticulo%
-						SetEdit(campoNota, ventModificarArticulo, finalNota)
+						WinActivate, %vModifArticulo_id%
+						SetEdit(vModifArticulo_nota, vModifArticulo_id, finalNota)
 						Sleep, 100
 					}
 					
@@ -475,7 +481,7 @@ OnSuccessfulSearch(){
 
 }
 ;}
- 
+
 ;{ Precios
 TextPrice2Float(price){
 	price := RegExReplace(price, "[^0-9.,]") ;Non-numbers begone. This includes you, whitespace. This includes you too, linebreaks.
@@ -494,7 +500,7 @@ TextPrice2Float(price){
 }
 
 ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdicionalString := "", ByRef precioAdicionalString := ""){
-	ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+	ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 
 	RegExMatch(notaAdicional, "im).*Incluye (.*)$", preciosAdicionales)
 	if(preciosAdicionales1)
@@ -545,14 +551,14 @@ PastePrice(newPrice := 0){
 		return
 	}
 	
-	if(not WinExist(ventModificarArticulo))
+	if(not WinExist(vModifArticulo_id))
 	{
 		ModificarArticulo()
 	}
 	
-	ControlGetText, oldPrice, %campoPrecioCosto%, %ventModificarArticulo%
+	ControlGetText, oldPrice, %vModifArticulo_precioCosto%, %vModifArticulo_id%
 	oldPrice := TextPrice2Float(oldPrice)
-	ControlGetText, itemID, %campoCodigo%, %ventModificarArticulo%
+	ControlGetText, itemID, %vModifArticulo_codigo%, %vModifArticulo_id%
 	
 	if(newPrice == 0)
 	{
@@ -582,9 +588,9 @@ PastePrice(newPrice := 0){
 	
 	newPrice := Round(newPrice, 3) ;Lupa quiere 3 decimales.
 	
-	ControlFocus, %campoPrecioCosto%, %ventModificarArticulo%
-	WinActivate, %ventModificarArticulo% ;TODO
-	ControlSend, %campoPrecioCosto%, %newPrice%, %ventModificarArticulo%
+	ControlFocus, %vModifArticulo_precioCosto%, %vModifArticulo_id%
+	WinActivate, %vModifArticulo_id% ;TODO
+	ControlSend, %vModifArticulo_precioCosto%, %newPrice%, %vModifArticulo_id%
 	
 	LogPriceChange(itemID, oldPrice, newPrice, modificadoresText, modificadorAdicionalString, precioAdicionalString)
 	lastPercent := percent
@@ -592,29 +598,29 @@ PastePrice(newPrice := 0){
 }
 
 SetMargins(margin1, margin2, margin3, fast := false){
-	if(not WinExist(ventModificarArticulo))
+	if(not WinExist(vModifArticulo_id))
 	{
 		ModificarArticulo()
 	}
 	
-	ControlFocus, %campoMargen1%, %ventModificarArticulo%
+	ControlFocus, %vModifArticulo_margen1%, %vModifArticulo_id%
 	Send, %margin1%{Enter}
 	Sleep, 100
-	ControlFocus, %campoMargen2%, %ventModificarArticulo%
+	ControlFocus, %vModifArticulo_margen2%, %vModifArticulo_id%
 	Send, %margin2%{Enter}
 	Sleep, 100
-	ControlFocus, %campoMargen3%, %ventModificarArticulo%
+	ControlFocus, %vModifArticulo_margen3%, %vModifArticulo_id%
 	Send, %margin3%{Enter}
 	Sleep, 100
-	ControlFocus, ComboBox4, %ventModificarArticulo%
-	Control, ChooseString, VENTAS/COMPRAS, ComboBox4, %ventModificarArticulo%
-	;ControlSend, ComboBox4, {Enter}, %ventModificarArticulo%
+	ControlFocus, ComboBox4, %vModifArticulo_id%
+	Control, ChooseString, VENTAS/COMPRAS, ComboBox4, %vModifArticulo_id%
+	;ControlSend, ComboBox4, {Enter}, %vModifArticulo_id%
 	
 	if(fast)
 	{
 		Sleep, 100
-		ControlFocus, Ok, %ventModificarArticulo%,,,, NA
-		ControlClick, Ok, %ventModificarArticulo%,,,, NA
+		ControlFocus, Ok, %vModifArticulo_id%,,,, NA
+		ControlClick, Ok, %vModifArticulo_id%,,,, NA
 		ProximoArticulo(false)
 	}
 	
@@ -623,16 +629,16 @@ SetMargins(margin1, margin2, margin3, fast := false){
 }
 
 FastSetRubro(rubro){
-	if(not WinExist(ventModificarArticulo))
+	if(not WinExist(vModifArticulo_id))
 	{
 		ModificarArticulo()
 	}
 	
-	ControlFocus, %campoRubro%, %ventModificarArticulo%,,,, NA
-	Control, ChooseString, %rubro%, %campoRubro%, %ventModificarArticulo%
+	ControlFocus, %vModifArticulo_rubro%, %vModifArticulo_id%,,,, NA
+	Control, ChooseString, %rubro%, %vModifArticulo_rubro%, %vModifArticulo_id%
 	Sleep, 100
-	ControlFocus, Ok, %ventModificarArticulo%,,,, NA
-	ControlClick, Ok, %ventModificarArticulo%,,,, NA
+	ControlFocus, Ok, %vModifArticulo_id%,,,, NA
+	ControlClick, Ok, %vModifArticulo_id%,,,, NA
 	Sleep, 200
 	ProximoArticulo(false)
 	
@@ -644,26 +650,26 @@ FastCorrectNota(proov){ ;Unashamedly adhoc.
 	if(proov == "Monteluz")
 	{
 		alias := GetAlias(false)
-		ControlGetText, notaAdicional, %campoNota%, %ventModificarArticulo%
+		ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 		if(RegExMatch(alias, "\-1") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 4$"))
 		{
-			SetEdit(campoNota, ventModificarArticulo, "Seek: Right 4")
+			SetEdit(vModifArticulo_nota, vModifArticulo_id, "Seek: Right 4")
 		}
 		else if(RegExMatch(alias, "\-7") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 6$"))
 		{
-			SetEdit(campoNota, ventModificarArticulo, "Seek: Right 6")
+			SetEdit(vModifArticulo_nota, vModifArticulo_id, "Seek: Right 6")
 		}
 		else if(RegExMatch(alias, "\-3") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 10$"))
 		{
-			SetEdit(campoNota, ventModificarArticulo, "Seek: Right 10")
+			SetEdit(vModifArticulo_nota, vModifArticulo_id, "Seek: Right 10")
 		}
 		else
 		{
 			MsgBox, Idk lol
 			return
 		}
-		ControlFocus, Ok, %ventModificarArticulo%,,,, NA
-		ControlClick, Ok, %ventModificarArticulo%,,,, NA
+		ControlFocus, Ok, %vModifArticulo_id%,,,, NA
+		ControlClick, Ok, %vModifArticulo_id%,,,, NA
 		Sleep, 200
 		ProximoArticulo(false)
 		;MsgBox, % alias
@@ -679,17 +685,17 @@ ProximoArticulo(openAfter := true)
 		return
 	}
 		
-	if(WinExist(ventModificarArticulo))
+	if(WinExist(vModifArticulo_id))
 	{
-		ControlFocus, Cancela, %ventModificarArticulo%,,,, NA
-		ControlClick, Cancela, %ventModificarArticulo%,,,, NA
-		ControlSend, Cancela, {Enter}, %ventModificarArticulo%
-		WinKill, %ventModificarArticulo%
-		WaitControlNotExist("Cancela", ventModificarArticulo)
+		ControlFocus, Cancela, %vModifArticulo_id%,,,, NA
+		ControlClick, Cancela, %vModifArticulo_id%,,,, NA
+		ControlSend, Cancela, {Enter}, %vModifArticulo_id%
+		WinKill, %vModifArticulo_id%
+		WaitControlNotExist("Cancela", vModifArticulo_id)
 	}
 	ControlSend, Sí, {Enter}, Atención
 	ControlSend, Sí, {Enter}, Atención
-	ControlSend, %campoListado%, {Down}, %ventReporteArticulos%
+	ControlSend, %vReporteArticulos_planilla%, {Down}, %vReporteArticulos_id%
 	if(openAfter)
 	{
 		ModificarArticulo()
@@ -703,15 +709,15 @@ AnteriorArticulo(openAfter := true)
 		return
 	}
 		
-	if(WinExist(ventModificarArticulo))
+	if(WinExist(vModifArticulo_id))
 	{
-		ControlFocus, Cancela, %ventModificarArticulo%,,,, NA
-		ControlClick, Cancela, %ventModificarArticulo%,,,, NA
-		ControlSend, Cancela, {Enter}, %ventModificarArticulo%
-		WinKill, %ventModificarArticulo%
-		WaitControlNotExist("Cancela", ventModificarArticulo)
+		ControlFocus, Cancela, %vModifArticulo_id%,,,, NA
+		ControlClick, Cancela, %vModifArticulo_id%,,,, NA
+		ControlSend, Cancela, {Enter}, %vModifArticulo_id%
+		WinKill, %vModifArticulo_id%
+		WaitControlNotExist("Cancela", vModifArticulo_id)
 	}
-	ControlSend, %campoListado%, {Up}, %ventReporteArticulos%
+	ControlSend, %vReporteArticulos_planilla%, {Up}, %vReporteArticulos_id%
 	if(openAfter)
 	{
 		ModificarArticulo()
@@ -721,25 +727,25 @@ AnteriorArticulo(openAfter := true)
 ModificarArticulo(){
 	Sleep, 200
 	
-	ControlFocus, %botonModificar_Listado%, %ventReporteArticulos%
+	ControlFocus, %vReporteArticulos_modificar%, %vReporteArticulos_id%
 	Sleep, 200
-	ControlClick, %botonModificar_Listado%, %ventReporteArticulos%
-	;ControlSend, %botonModificar_Listado%, ^M, %ventReporteArticulos%
+	ControlClick, %vReporteArticulos_modificar%, %vReporteArticulos_id%
+	;ControlSend, %vReporteArticulos_modificar%, ^M, %vReporteArticulos_id%
 	Loop{
 		if(A_Index = 350){
-			MsgBox, GetAlias - Could not get (551) ventModificarArticulo.
+			MsgBox, GetAlias - Could not get (551) vModifArticulo_id.
 			return
 		}
-		;ControlClick, %botonModificar_Listado%, %ventReporteArticulos%,,,, NA
-		;ControlSend, %botonModificar_Listado%, {Space}, %ventReporteArticulos%
-		WinWait, %ventModificarArticulo%, , 0.5
+		;ControlClick, %vReporteArticulos_modificar%, %vReporteArticulos_id%,,,, NA
+		;ControlSend, %vReporteArticulos_modificar%, {Space}, %vReporteArticulos_id%
+		WinWait, %vModifArticulo_id%, , 0.5
 		if not ErrorLevel {
 			Break
 		}
 	}
 }
 ;}
- 
+
 ;{ Logging
 LogPriceChange(itemID := "", oldPrice := "", newPrice = "", modificadores := "", modificadorAdicional := "", precioAdicional := ""){
     percent := (100*newPrice/oldPrice)-100
@@ -750,15 +756,15 @@ LogPriceChange(itemID := "", oldPrice := "", newPrice = "", modificadores := "",
 }
 
 LogSend(finalText := ""){
-    if(not WinExist(ventNotepad))
+    if(not WinExist(vNotepad_id))
 	{
         prev := WinActive("A")
         Run, Notepad
-        WinWait, %ventNotepad%
+        WinWait, %vNotepad_id%
         WinActivate, ahk_id %prev%
     }
-    ControlSend,,^{End}, %ventNotepad% ;Ctrl+End: Go to end of document
-    Control, EditPaste, %finalText%, , %ventNotepad%
+    ControlSend,,^{End}, %vNotepad_id% ;Ctrl+End: Go to end of document
+    Control, EditPaste, %finalText%, , %vNotepad_id%
 }
 ;}
 
@@ -1252,30 +1258,30 @@ If(WinExist("Diferencia"))
 	Send, {Left}{Enter}
 	return
 }
-if WinExist(ventFactProov)
+if WinExist(vFacturaProov_id)
 { ;todo move this to functions up top
-	if (WinExist(ventFact_Modificacion))
+	if (WinExist(vFacturaProovModif_id))
 	{
-		ControlGet, tipoIVA, Choice, , ComboBox1, %ventFact_Modificacion%
+		ControlGet, tipoIVA, Choice, , ComboBox1, %vFacturaProovModif_id%
 		if (InStr(tipoIVA, "NETO GRAVADO"))
 		{
 			WinMove, 100, 100
-			ControlGetText, netoPrevio, Edit1, %ventFact_Modificacion%
-			ControlGetText, netoReal, Static12, %ventFactProov%
+			ControlGetText, netoPrevio, Edit1, %vFacturaProovModif_id%
+			ControlGetText, netoReal, Static12, %vFacturaProov_id%
 			InputBox, totalTemp, Importe Sumado, Ingrese el importe sumado que aparece abajo a la derecha`, al lado del botón Asigna.
 			if(ErrorLevel or not IsNum(totalTemp))
 			{
 				return
 			}
 			newNeto := TextPrice2Float(netoPrevio) - TextPrice2Float(totalTemp) + TextPrice2Float(netoReal)
-			ControlFocus, Edit1, %ventFact_Modificacion%
-			ControlSetText, Edit1,, %ventFact_Modificacion%
+			ControlFocus, Edit1, %vFacturaProovModif_id%
+			ControlSetText, Edit1,, %vFacturaProovModif_id%
 			SendRaw, % newNeto
 			return
 		}
 	}
 
-	primeraVentFact := FirstWindowThatExists([ventFact_Modificacion, ventFact_Nuevo])
+	primeraVentFact := FirstWindowThatExists([vFacturaProovModif_id, vFacturaProovNuevo_id])
 	if (primeraVentFact)
 	{
 		ControlGetText, factCodigo, Edit1, %primeraVentFact%
@@ -1291,47 +1297,47 @@ if WinExist(ventFactProov)
 		ControlGetText, factPrecioCosto, Edit4, %primeraVentFact%
 		ControlSend, Edit4, {Enter}, %primeraVentFact%
 		
-		WinWait, %ventModificarArticulo%
+		WinWait, %vModifArticulo_id%
 		
-		ControlGetText, factNombreCompleto, %campoDescripcion%, %ventModificarArticulo%
+		ControlGetText, factNombreCompleto, %vModifArticulo_descripcion%, %vModifArticulo_id%
 		factNombreCompleto := Trim(factNombreCompleto)
 		factPrecioCosto := TextPrice2Float(factPrecioCosto)
 		ApplyPriceMultipliers(factPrecioCosto)
 		factPrecioCosto := RegExReplace(factPrecioCosto,"(\.\d*?)0*$","$1")
 		factPrecioCosto := RegExReplace(factPrecioCosto,"\.$")
 		
-		ControlClick, %botonProovedoresHabituales%, %ventModificarArticulo%,,,, NA ;Clickea el boton Proveedores Habituales
-		WinWait, %ventProveedoresHabituales%, , 5
+		ControlClick, %vReporteArticulos_proovedoresHabituales%, %vModifArticulo_id%,,,, NA ;Clickea el boton Proveedores Habituales
+		WinWait, %vProovedoresHabituales_id%, , 5
 		if ErrorLevel {
-			MsgBox, GetAlias - Could not rouse ventProveedoresHabituales from the dead.
+			MsgBox, GetAlias - Could not rouse vProovedoresHabituales_id from the dead.
 			return
 		}
-		ControlClick, TBTNBMP11, %ventProveedoresHabituales%,,,, NA
-		WinWait, %ventVerProveedor%, , 5
+		ControlClick, TBTNBMP11, %vProovedoresHabituales_id%,,,, NA
+		WinWait, %vVerProovedorHabitual_id%, , 5
 		if ErrorLevel
 		{
-			MsgBox, GetAlias - Could not summon ventVerProveedor to this mortal coil.
+			MsgBox, GetAlias - Could not summon vVerProovedorHabitual_id to this mortal coil.
 			return
 		}
-		ControlGetText, factAliasText, %campoAlias_Habituales%, %ventVerProveedor%
+		ControlGetText, factAliasText, %vVerProovedorHabitual_alias%, %vVerProovedorHabitual_id%
 		factAliasText := Trim(factAliasText)
-		ControlClick, Salir, %ventVerProveedor%,,,, NA
-		ControlSend,, {Esc}, %ventProveedoresHabituales%
-		ControlSend, Cancela, {Space}, %ventModificarArticulo%
-		ControlFocus, TWBROWSE1, %ventFactProov%
-		ControlSend, TWBROWSE1, {PGDN}, %ventFactProov%
+		ControlClick, Salir, %vVerProovedorHabitual_id%,,,, NA
+		ControlSend,, {Esc}, %vProovedoresHabituales_id%
+		ControlSend, Cancela, {Space}, %vModifArticulo_id%
+		ControlFocus, TWBROWSE1, %vFacturaProov_id%
+		ControlSend, TWBROWSE1, {PGDN}, %vFacturaProov_id%
 		
 		finalDetailText = %factCantidad% x %factCodigo% (%factAliasText%) - %factPrecioCosto% - %factNombreCompleto%`r`n
 		LogSend(finalDetailText)
 		Sleep, 200
-		ControlClick, Button5, %ventFactProov%,,,, NA
+		ControlClick, Button5, %vFacturaProov_id%,,,, NA
 
 	}
 	return
 }
 
-WinWait, %ventModificarArticulo%
-ControlSend, Ok, {Space}, %ventModificarArticulo%
+WinWait, %vModifArticulo_id%
+ControlSend, Ok, {Space}, %vModifArticulo_id%
 ControlSend, Sí, {Enter}, Atención
 ControlSend, Sí, {Enter}, Atención
 ProximoArticulo(false)
@@ -1339,14 +1345,14 @@ Buscar()
 return
 
 !^Launch_Mail::
-WinActivate, %ventModificarArticulo%
-WinActivate, %ventNuevoArticulo%
-camposAClonar := [campoDescripcion, campoPuntoPedido, campoEmpaque, campoUnidad, campoMoneda, campoMargen1, campoMargen2, campoMargen3, campoIVA, campoRubro, campoNota]
+WinActivate, %vModifArticulo_id%
+WinActivate, %vNuevoArticulo_id%
+camposAClonar := [vModifArticulo_descripcion, vModifArticulo_puntoPedido, vModifArticulo_empaque, vModifArticulo_unidad, vModifArticulo_moneda, vModifArticulo_margen1, vModifArticulo_margen2, vModifArticulo_margen3, vModifArticulo_iva, vModifArticulo_rubro, vModifArticulo_nota]
 
-;DeepCopyControl(campoPrecioCosto, ventModificarArticulo, ventNuevoArticulo, ",")
+;DeepCopyControl(vModifArticulo_precioCosto, vModifArticulo_id, vNuevoArticulo_id, ",")
 for i, elCampo in camposAClonar
 {
-	DeepCopyControl(elCampo, ventModificarArticulo, ventNuevoArticulo)
+	DeepCopyControl(elCampo, vModifArticulo_id, vNuevoArticulo_id)
 }
 return
 
@@ -1363,11 +1369,11 @@ return
 
 #If overrideMiddleClick
 MButton::
-If(InStr(WindowUnderMouse(), ventReporteArticulos))
+If(InStr(WindowUnderMouse(), vReporteArticulos_id))
 {
-	ControlSend, Cancela, {Enter}, %ventModificarArticulo%
+	ControlSend, Cancela, {Enter}, %vModifArticulo_id%
 }
-Else If(InStr(WindowUnderMouse(), ventAdobeReader) or InStr(WindowUnderMouse(), ventCalc) or InStr(WindowUnderMouse(), ventWord))
+Else If(InStr(WindowUnderMouse(), vAdobe_id) or InStr(WindowUnderMouse(), vCalc_id) or InStr(WindowUnderMouse(), vWord_id))
 {
 	Click, 2
 	Sleep, 500
