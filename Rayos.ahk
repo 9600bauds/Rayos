@@ -7,25 +7,9 @@ SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 
 #Include modules\searchTypes.ahk ; Defines search types
 
-;{ Globals (most of these are effectively defines)
-global vModifArticulo_id := "Modificación : ahk_exe LUPA.exe"
-global vNuevoArticulo_id := "Nuevo"
-global vModifArticulo_codigo := "Edit1"
-global vModifArticulo_codigoBarras := "Edit2"
-global vModifArticulo_descripcion := "Edit3"
-global vModifArticulo_descripcionReducida := "Edit4"
-global vModifArticulo_puntoPedido := "Edit5"
-global vModifArticulo_empaque := "Edit6"
-global vModifArticulo_unidad := "ComboBox1"
-global vModifArticulo_moneda := "ComboBox2"
-global vModifArticulo_precioCosto := "Edit7"
-global vModifArticulo_margen1 := "Edit8"
-global vModifArticulo_margen2 := "Edit11"
-global vModifArticulo_margen3:= "Edit14"
-global vModifArticulo_iva := "ComboBox3"
-global vModifArticulo_rubro := "ComboBox4"
-global vModifArticulo_nota := "Edit17"
+#include modules\ventanas\ModificarArticulo.ahk
 
+;{ Globals (most of these are effectively defines)
 global vModifProovedor_id := "Modificación"
 
 global vVerProovedorHabitual_id := "Consulta"
@@ -33,7 +17,6 @@ global vVerProovedorHabitual_numProovedor := "Edit1"
 global vVerProovedorHabitual_alias := "Edit2"
 
 global vProovedoresHabituales_id := "Proveedores Habituales"
-
 
 global vMiniAliasProovedor_id := "Alias del Proveedor"
 global vMiniAliasProovedor_alias := "Edit1"
@@ -159,7 +142,7 @@ GetAlias(parseAfter := true, checkNota := true){
 		}
 		if(not WinExist(vModifArticulo_id))
 		{			
-			ModificarArticulo()
+			vModifArticulo_Abrir()
 		}
 		if(not aliasText){
 			if(not WinExist(vProovedoresHabituales_id))
@@ -190,7 +173,7 @@ GetAlias(parseAfter := true, checkNota := true){
 	{
 		if(not WinExist(vModifArticulo_id))
 		{
-			ModificarArticulo()
+			vModifArticulo_Abrir()
 		}
 		ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 		RegExMatch(notaAdicional, "im).*(?:Alias completo|Alias|Simil):[ ]+(.*)$", aliasReplacement)
@@ -553,7 +536,7 @@ PastePrice(newPrice := 0){
 	
 	if(not WinExist(vModifArticulo_id))
 	{
-		ModificarArticulo()
+		vModifArticulo_Abrir()
 	}
 	
 	ControlGetText, oldPrice, %vModifArticulo_precioCosto%, %vModifArticulo_id%
@@ -600,7 +583,7 @@ PastePrice(newPrice := 0){
 SetMargins(margin1, margin2, margin3, fast := false){
 	if(not WinExist(vModifArticulo_id))
 	{
-		ModificarArticulo()
+		vModifArticulo_Abrir()
 	}
 	
 	ControlFocus, %vModifArticulo_margen1%, %vModifArticulo_id%
@@ -631,7 +614,7 @@ SetMargins(margin1, margin2, margin3, fast := false){
 FastSetRubro(rubro){
 	if(not WinExist(vModifArticulo_id))
 	{
-		ModificarArticulo()
+		vModifArticulo_Abrir()
 	}
 	
 	ControlFocus, %vModifArticulo_rubro%, %vModifArticulo_id%,,,, NA
@@ -687,18 +670,13 @@ ProximoArticulo(openAfter := true)
 		
 	if(WinExist(vModifArticulo_id))
 	{
-		ControlFocus, Cancela, %vModifArticulo_id%,,,, NA
-		ControlClick, Cancela, %vModifArticulo_id%,,,, NA
-		ControlSend, Cancela, {Enter}, %vModifArticulo_id%
-		WinKill, %vModifArticulo_id%
-		WaitControlNotExist("Cancela", vModifArticulo_id)
+		vModifArticulo_Cerrar()
 	}
-	ControlSend, Sí, {Enter}, Atención
-	ControlSend, Sí, {Enter}, Atención
+	
 	ControlSend, %vReporteArticulos_planilla%, {Down}, %vReporteArticulos_id%
 	if(openAfter)
 	{
-		ModificarArticulo()
+		vModifArticulo_Abrir()
 	}
 }
 
@@ -711,37 +689,12 @@ AnteriorArticulo(openAfter := true)
 		
 	if(WinExist(vModifArticulo_id))
 	{
-		ControlFocus, Cancela, %vModifArticulo_id%,,,, NA
-		ControlClick, Cancela, %vModifArticulo_id%,,,, NA
-		ControlSend, Cancela, {Enter}, %vModifArticulo_id%
-		WinKill, %vModifArticulo_id%
-		WaitControlNotExist("Cancela", vModifArticulo_id)
+		vModifArticulo_Cerrar()
 	}
 	ControlSend, %vReporteArticulos_planilla%, {Up}, %vReporteArticulos_id%
 	if(openAfter)
 	{
-		ModificarArticulo()
-	}
-}
-
-ModificarArticulo(){
-	Sleep, 200
-	
-	ControlFocus, %vReporteArticulos_modificar%, %vReporteArticulos_id%
-	Sleep, 200
-	ControlClick, %vReporteArticulos_modificar%, %vReporteArticulos_id%
-	;ControlSend, %vReporteArticulos_modificar%, ^M, %vReporteArticulos_id%
-	Loop{
-		if(A_Index = 350){
-			MsgBox, GetAlias - Could not get (551) vModifArticulo_id.
-			return
-		}
-		;ControlClick, %vReporteArticulos_modificar%, %vReporteArticulos_id%,,,, NA
-		;ControlSend, %vReporteArticulos_modificar%, {Space}, %vReporteArticulos_id%
-		WinWait, %vModifArticulo_id%, , 0.5
-		if not ErrorLevel {
-			Break
-		}
+		vModifArticulo_Abrir()
 	}
 }
 ;}
@@ -1323,7 +1276,7 @@ if WinExist(vFacturaProov_id)
 		factAliasText := Trim(factAliasText)
 		ControlClick, Salir, %vVerProovedorHabitual_id%,,,, NA
 		ControlSend,, {Esc}, %vProovedoresHabituales_id%
-		ControlSend, Cancela, {Space}, %vModifArticulo_id%
+		vModifArticulo_Cerrar()
 		ControlFocus, TWBROWSE1, %vFacturaProov_id%
 		ControlSend, TWBROWSE1, {PGDN}, %vFacturaProov_id%
 		
@@ -1371,7 +1324,7 @@ return
 MButton::
 If(InStr(WindowUnderMouse(), vReporteArticulos_id))
 {
-	ControlSend, Cancela, {Enter}, %vModifArticulo_id%
+	vModifArticulo_Cerrar()
 }
 Else If(InStr(WindowUnderMouse(), vAdobe_id) or InStr(WindowUnderMouse(), vCalc_id) or InStr(WindowUnderMouse(), vWord_id))
 {
