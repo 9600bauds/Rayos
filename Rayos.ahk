@@ -18,9 +18,6 @@ global vVerProovedorHabitual_alias := "Edit2"
 
 global vProovedoresHabituales_id := "Proveedores Habituales"
 
-global vMiniAliasProovedor_id := "Alias del Proveedor"
-global vMiniAliasProovedor_alias := "Edit1"
-
 global vReporteArticulos_id := "Artículos de :"
 global vReporteArticulos_proovedoresHabituales := "Button17"
 
@@ -136,10 +133,6 @@ GetAlias(parseAfter := true, checkNota := true){
 	aliasText := ""
 	if(WinExist(vReporteArticulos_id))
 	{
-		if(WinExist(vMiniAliasProovedor_id)){
-			ControlGetText, aliasText, %vMiniAliasProovedor_alias%, %vMiniAliasProovedor_id%
-			WinKill, %vMiniAliasProovedor_id%
-		}
 		if(not WinExist(vModifArticulo_id))
 		{			
 			vModifArticulo_Abrir()
@@ -188,37 +181,6 @@ GetAlias(parseAfter := true, checkNota := true){
 	}
 	return aliasText
 }
-
-FastSetAlias(thealias := ""){
-	if(!thealias or theAlias = "")
-		Send {Ctrl Down}c{Ctrl Up}
-		Sleep, 100
-		thealias := Clipboard
-	ControlClick, TBTNBMP29, %vReporteArticulos_id%
-	WinWait, %vMiniAliasProovedor_id%
-	WinActivate, %vMiniAliasProovedor_id%
-	ControlFocus, Edit1, %vMiniAliasProovedor_id%
-	Send, {Shift Down}{End}{Shift Up}
-	thealias := "0" . thealias
-	Sleep, 100
-	SendRaw, % thealias
-	Sleep, 100
-	Send, {Enter 3}
-	Sleep, 500
-	ProximoArticulo(false)
-}
-
-FastAliasizeDesc(){
-	myAlias := GetAlias()
-	ControlFocus, %vModifArticulo_descripcion%, %vModifArticulo_id%
-	Sleep, 300
-	ControlSend, %vModifArticulo_descripcion%, {End}{Space}, %vModifArticulo_id%
-	Control, EditPaste, %myAlias%, %vModifArticulo_descripcion%, %vModifArticulo_id%
-	Sleep, 300
-	ControlFocus, Ok, %vModifArticulo_id%,,,, NA
-	ControlClick, Ok, %vModifArticulo_id%,,,, NA
-}
-
 ;}
 
 ;{ Búsqueda
@@ -625,38 +587,7 @@ FastSetRubro(rubro){
 	Sleep, 200
 	ProximoArticulo(false)
 	
-	
 	return true
-}
-
-FastCorrectNota(proov){ ;Unashamedly adhoc.
-	if(proov == "Monteluz")
-	{
-		alias := GetAlias(false)
-		ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
-		if(RegExMatch(alias, "\-1") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 4$"))
-		{
-			SetEdit(vModifArticulo_nota, vModifArticulo_id, "Seek: Right 4")
-		}
-		else if(RegExMatch(alias, "\-7") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 6$"))
-		{
-			SetEdit(vModifArticulo_nota, vModifArticulo_id, "Seek: Right 6")
-		}
-		else if(RegExMatch(alias, "\-3") and !RegExMatch(notaAdicional, "im).*Seek:[ ]+Right 10$"))
-		{
-			SetEdit(vModifArticulo_nota, vModifArticulo_id, "Seek: Right 10")
-		}
-		else
-		{
-			MsgBox, Idk lol
-			return
-		}
-		ControlFocus, Ok, %vModifArticulo_id%,,,, NA
-		ControlClick, Ok, %vModifArticulo_id%,,,, NA
-		Sleep, 200
-		ProximoArticulo(false)
-		;MsgBox, % alias
-	}
 }
 ;}
 
@@ -1166,7 +1097,6 @@ if(savedModificadores or savedPostSearchString or savedSearchTypes or savedSuppr
 Launch_Media::
 ;FastCorrectNota("Monteluz")
 ;FastSetRubro("16")
-;FastSetAlias()
 ;SetMargins("60", "25", "40", true)
 ;Msgbox, Testing...	
 ;FastAliasizeDesc()
