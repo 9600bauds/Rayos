@@ -20,7 +20,9 @@ global vModifArticulo_ok := "Button18"
 global vModifArticulo_cancela := "Button19"
 
 vModifArticulo_Cerrar(){
-	if(!WinExist(vModifArticulo_id)) return
+	if(!WinExist(vModifArticulo_id)){
+		return
+	}	
 		
 	ControlFocus, %vModifArticulo_cancela%, %vModifArticulo_id%,,,, NA
 	ControlClick, %vModifArticulo_cancela%, %vModifArticulo_id%,,,, NA
@@ -30,7 +32,9 @@ vModifArticulo_Cerrar(){
 }
 
 vModifArticulo_Abrir(){
-	if(WinExist(vModifArticulo_id)) return
+	if(WinExist(vModifArticulo_id)){
+		return
+	}	
 
 	Sleep, 200
 	
