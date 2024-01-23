@@ -1,5 +1,5 @@
 ﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
-#Warn  ; Enable warnings to assist with detecting common errors.
+;#Warn  ; Enable warnings to assist with detecting common errors.
 #SingleInstance force ; Close old versions of this script automatically.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -8,21 +8,15 @@ SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 #Include modules\searchTypes.ahk ; Defines search types
 
 #include modules\ventanas\ModificarArticulo.ahk
+#include modules\ventanas\Proovedores.ahk
 
 ;{ Globals (most of these are effectively defines)
-global vModifProovedor_id := "Modificación"
-
-global vVerProovedorHabitual_id := "Consulta"
-global vVerProovedorHabitual_numProovedor := "Edit1"
-global vVerProovedorHabitual_alias := "Edit2"
-
-global vProovedoresHabituales_id := "Proveedores Habituales"
 
 global vReporteArticulos_id := "Artículos de :"
-global vReporteArticulos_proovedoresHabituales := "Button17"
+global vReporteArticulos_proovedoresHabituales := "Button18"
 
 global vReporteArticulos_planilla := "TXBROWSE1"
-global vReporteArticulos_modificar = "TBTNBMP55"
+global vReporteArticulos_modificar = "TBTNBMP57"
 
 global vNotepad_id := "ahk_class Notepad"
 global vWord_id := " - Word"
@@ -30,7 +24,7 @@ global vCalc_id := "OpenOffice Calc"
 global vCalc_buscar := "Find & Replace"
 global vCalc_main := "ahk_class SALFRAME" ;Precisamente la planilla principal, no ningún diálogo
 global vAdobe_id := "Adobe Acrobat"
-global vAdobeBuscar_id := "ahk_class AVL_AVView41"
+global vAdobeBuscar_id := "Buscar ahk_exe Acrobat.exe"
 global vAdobeBuscar_ok := "Button18"
 global vAdobeBuscar_input := "Edit5"
 global vAdobeBuscar_resultados := "Static12"
@@ -115,9 +109,9 @@ ParseAlias(alias){
 	alias := RegExReplace(alias, "^0") ;Remove leading zero.
 	alias := RegExReplace(alias, "[ \t]+$") ;Remove trailing whitespace.	
 	
-	if(InStr(alias, "NO TRAER") or InStr(alias, "NO COMPRAR") or RegExMatch(alias, "^[-]+$")){
-		return "NEXT!"
-	}
+	;if(InStr(alias, "NO TRAER") or InStr(alias, "NO COMPRAR") or RegExMatch(alias, "^[-]+$")){
+	;	return "NEXT!"
+	;}
 	
 	alias = % executeSearchTypes(alias)
 	
@@ -190,9 +184,14 @@ Buscar(){
 		return
 	}
 	working := true
-		
+			
 	alias := GetAlias()
+	alias := RegExReplace(alias, "\s+NO TRAER", "") ;Just remove these common words.
 	if(alias == "NEXT!"){
+		if(shouldStop())
+		{
+			return
+		}
 		ProximoArticulo(false)
 		Buscar()
 		return
@@ -242,11 +241,11 @@ Buscar(){
 			{
 				WinGet, activeID, ID, A
 				GetClientSize(activeID, winWidth, winHeight)
-				if(winHeight == 74){ ;"End of File" dialog
+				if(winHeight == 89){ ;"End of File" dialog
 					Send, {Enter}
 					Continue
 				}
-				if(winHeight == 80){ ;"Not Found" dialog
+				if(winHeight == 85){ ;"Not Found" dialog
 					Send, {Enter}
 					OnUnsuccessfulSearch()
 					return 0
@@ -536,6 +535,8 @@ PastePrice(newPrice := 0){
 	ControlFocus, %vModifArticulo_precioCosto%, %vModifArticulo_id%
 	WinActivate, %vModifArticulo_id% ;TODO
 	ControlSend, %vModifArticulo_precioCosto%, %newPrice%, %vModifArticulo_id%
+	
+	;Control, ChooseString, Dolares, %vModifArticulo_moneda%, %vModifArticulo_id%
 	
 	LogPriceChange(itemID, oldPrice, newPrice, modificadoresText, modificadorAdicionalString, precioAdicionalString)
 	lastPercent := percent

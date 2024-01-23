@@ -23,6 +23,7 @@ DeactivateAllSearchTypes() {
     for index_deactsearchtypes, searchType_deactsearchtypes in searchTypes {
         searchType_deactsearchtypes.active := false
     }
+    RegDelete, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchTypes
 	refreshSearchTypeMenu()
 }
 
