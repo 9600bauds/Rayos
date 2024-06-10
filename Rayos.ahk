@@ -50,6 +50,7 @@ global working := false
 global shouldStop := false
 
 global lastSeekCol := ""
+global lastSearchedAlias := ""
 ;}
 
 ;{ Modificadores de Precio
@@ -61,7 +62,7 @@ SetModificadores(modificadoresInput := "", displayMessage := true){
 		if ErrorLevel
 			return ;Cancel
 	}
-	
+
 	tempTally := 1
 	tempStr := ""
 	tempPercent := 0
@@ -81,8 +82,8 @@ SetModificadores(modificadoresInput := "", displayMessage := true){
 		MsgBox, SetModificadores - Modificadores inválidos. (multiplicador resultante: %tempTally%)
 		return -1
 	}
-	
-	
+
+
 	relativeDiff := Round((tempTally - modificadoresMult) / modificadoresMult * 100, 2)
 	modificadoresText := tempStr
 	modificadoresMult := tempTally
@@ -101,20 +102,20 @@ Percent2Multiplier(percent){
 Multiplier2Percent(multiplier){
 	multiplier := multiplier * 100
 	return % multiplier . "%"
-}	
+}
 ;}
 
 ;{ Alias
 ParseAlias(alias){
 	alias := RegExReplace(alias, "^0") ;Remove leading zero.
-	alias := RegExReplace(alias, "[ \t]+$") ;Remove trailing whitespace.	
-	
+	alias := RegExReplace(alias, "[ \t]+$") ;Remove trailing whitespace.
+
 	;if(InStr(alias, "NO TRAER") or InStr(alias, "NO COMPRAR") or RegExMatch(alias, "^[-]+$")){
 	;	return "NEXT!"
 	;}
-	
+
 	alias = % executeSearchTypes(alias)
-	
+
 	return alias
 }
 
@@ -123,12 +124,12 @@ GetAlias(parseAfter := true, checkNota := true){
 	{
 		return
 	}
-		
+
 	aliasText := ""
 	if(WinExist(vReporteArticulos_id))
 	{
 		if(not WinExist(vModifArticulo_id))
-		{			
+		{
 			vModifArticulo_Abrir()
 		}
 		if(not aliasText){
@@ -149,13 +150,13 @@ GetAlias(parseAfter := true, checkNota := true){
 				}
 			}
 			ControlGetText, aliasText, %vVerProovedorHabitual_alias%, %vVerProovedorHabitual_id%
-			
+
 			WinKill, %vVerProovedorHabitual_id%
 			ControlClick, Salir, %vVerProovedorHabitual_id%,,,, NA
 			WinKill, %vProovedoresHabituales_id%
 		}
 	}
-	
+
 	if(checkNota)
 	{
 		if(not WinExist(vModifArticulo_id))
@@ -167,9 +168,9 @@ GetAlias(parseAfter := true, checkNota := true){
 		if(aliasReplacement1)
 		{
 			aliasText := aliasReplacement1
-		}		
+		}
 	}
-	
+
 	if(parseAfter){
 		aliasText := ParseAlias(aliasText)
 	}
@@ -184,7 +185,7 @@ Buscar(){
 		return
 	}
 	working := true
-			
+
 	alias := GetAlias()
 	alias := RegExReplace(alias, "\s+NO TRAER", "") ;Just remove these common words.
 	if(alias == "NEXT!"){
@@ -199,12 +200,13 @@ Buscar(){
 	if(not alias){
 		return
 	}
-	
+	lastSearchedAlias := alias
+
 	if WinExist(vCalc_id)
 	{
         WinActivate, %vCalc_id%
         WinWait, %vCalc_id%
-		
+
         if WinExist(vCalc_buscar)
 		{
             WinActivate, %vCalc_buscar%
@@ -216,42 +218,42 @@ Buscar(){
             Send, ^f ;Ctrl+F: Buscar
         }
         WinWait, %vCalc_buscar%
-		
+
         WinGet, ventBuscarID, ID, %vCalc_buscar%
 		curCoords := Calc_GetSelectedCoords()
-		
+
         SendRaw, % alias
 		Send, {Del}
 		Send, {Enter}
 		Loop{
 			Sleep, 50
-			
+
 			if(A_Cursor == "Wait")
 			{
 				Continue
 			}
-			
+
 			if(curCoords != Calc_GetSelectedCoords())
 			{
 				OnSuccessfulSearch()
 				return 1
 			}
-			
+
 			if(not WinActive(ventBuscarID))
 			{
 				WinGet, activeID, ID, A
 				GetClientSize(activeID, winWidth, winHeight)
-				if(winHeight == 89){ ;"End of File" dialog
+				if((winHeight == 92) or (winHeight == 103) or (winHeight == 74)){ ;"End of File" dialog
 					Send, {Enter}
 					Continue
 				}
-				if(winHeight == 85){ ;"Not Found" dialog
+				if((winHeight == 100) or (winHeight == 109) or (winHeight == 80)){ ;"Not Found" dialog
 					Send, {Enter}
 					OnUnsuccessfulSearch()
 					return 0
-				}			
+				}
 			}
-			
+
             if(A_Index = 20){
 				OnUnsuccessfulSearch()
 				return 0
@@ -272,7 +274,7 @@ Buscar(){
 			Send, %pageOverrides1%{Enter}
 			return
 		}
-		
+
         WinActivate, %vAdobeBuscar_id%
         WinWait, %vAdobeBuscar_id%
         ControlClick, %vAdobeBuscar_ok%, %vAdobeBuscar_id%
@@ -281,12 +283,12 @@ Buscar(){
 		ControlSetText, %vAdobeBuscar_input%,, %vAdobeBuscar_id%
 		SendRaw, % alias
 		Send, {Enter}
-		
+
 		WinWait, %vAdobeBuscar_id%
 		WaitControlNotExist("Stop", vAdobeBuscar_id)
 		WaitControlExist("Nueva búsqueda", vAdobeBuscar_id)
         WinWait, %vAdobeBuscar_id%
-		
+
         ControlGetText, resultsText, %vAdobeBuscar_resultados%, %vAdobeBuscar_id%
         if(InStr(resultsText, "0 doc")){
             OnUnsuccessfulSearch()
@@ -322,11 +324,19 @@ Buscar(){
 		Send, {Enter}
         return 1
     }
-	
-	working := false	
+
+	working := false
 }
 
 OnUnsuccessfulSearch(){
+	ControlGetText, itemID, %vModifArticulo_codigo%, %vModifArticulo_id%
+	ControlGetText, nombre, %vModifArticulo_descripcion%, %vModifArticulo_id%
+	nombreRecortado := Trim(nombre)
+
+	finalText = No encontrado: %itemID% (%lastSearchedAlias%) - %nombreRecortado%
+    finalText = %finalText%`r`n ;concatenation
+
+	LogSend(finalText)
 	if(autoPilot) ;living on a edge baby
 	{
 		if(shouldStop){
@@ -345,7 +355,7 @@ OnSuccessfulSearch(){
 	{
 		return
 	}
-	
+
 	ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 	RegExMatch(notaAdicional, "im).*Tooltip:[ ]+(.*)$", tooltips)
 	if(tooltips1)
@@ -357,16 +367,16 @@ OnSuccessfulSearch(){
 	if WinExist(vCalc_id)
 	{
 		WinActivate, %vCalc_main%
-		
+
 		for index, match in AllRegexMatches(PostSearchString, "{[^{}]+}")
 		{
 			if(match == "{Seek}"){
 				ControlGetText, oldPrice, %vModifArticulo_precioCosto%, %vModifArticulo_id%
 				oldPrice := TextPrice2Float(oldPrice)
 				ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
-				
+
 				RegExMatch(notaAdicional, "im).*Seek:[ ]+(.*)$", seekOverride)
-				
+
 				if(not seekOverride1 and forceSeek and Calc_IsInMergedCell())
 				{
 					ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
@@ -383,9 +393,9 @@ OnSuccessfulSearch(){
 						SetEdit(vModifArticulo_nota, vModifArticulo_id, finalNota)
 						Sleep, 100
 					}
-					
+
 				}
-				
+
 				;Seek: {End}{Down}{Left 2}
 				if(seekOverride1)
 				{
@@ -394,7 +404,9 @@ OnSuccessfulSearch(){
 					}
 					Send, % seekOverride1
 					Sleep, 100
-					Send {Ctrl Down}c{Ctrl Up}
+					Clipboard := "" ; Empty the clipboard
+					Send, ^c
+					ClipWait, 2
 				}
 				else
 				{
@@ -403,10 +415,12 @@ OnSuccessfulSearch(){
 			}
 			else if(match == "{Paste}"){
 				WinWait, A
-				Send {Ctrl Down}c{Ctrl Up}
+				Clipboard := "" ; Empty the clipboard
+				Send, ^c
+				ClipWait, 2
 				WinWait, A
 				success := PastePrice()
-				if(success and (not shouldStop) and lastPercent <= 20 and lastPercent >= -15) ;living on a EEEEDGE
+				if(success and (not shouldStop) and (suppressWarnings or (lastPercent <= 20 and lastPercent >= -15))) ;living on a EEEEDGE
 				{
 					working := true
 					Send, {Launch_Mail}
@@ -429,7 +443,7 @@ OnSuccessfulSearch(){
 ;{ Precios
 TextPrice2Float(price){
 	price := RegExReplace(price, "[^0-9.,]") ;Non-numbers begone. This includes you, whitespace. This includes you too, linebreaks.
-	
+
 	if(RegExMatch(price, "\d+\.\d{3}\,\d+")){ ;Example: 11.517,12
 		price := RegExReplace(price, "\.") ;Remove separator dots
 		price := RegExReplace(price, "\,", ".") ;Commas to something that actually makes sense
@@ -467,7 +481,7 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 		precioAdicionalString := " +" . precioAdicional
 		newPrice := newPrice + precioAdicional
 	}
-	
+
 	modificadorAdicionalString := ""
     RegExMatch(notaAdicional, "im).*Precio de lista \*([0-9.]+)$", extraMults)
     if(extraMults1)
@@ -481,9 +495,9 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 		modificadorAdicionalString := " /" . extraDivisions1
         newPrice := newPrice / extraDivisions1
     }
-	
+
 	newPrice := newPrice * modificadoresMult
-	
+
 	if(newPrice * 500 < oldPrice){ ;FUCK THOUSANDS SEPARATORS
         newPrice := newPrice * 1000
     }
@@ -494,16 +508,18 @@ PastePrice(newPrice := 0){
 	{
 		return
 	}
-	
+
 	if(not WinExist(vModifArticulo_id))
 	{
 		vModifArticulo_Abrir()
 	}
-	
+
 	ControlGetText, oldPrice, %vModifArticulo_precioCosto%, %vModifArticulo_id%
 	oldPrice := TextPrice2Float(oldPrice)
 	ControlGetText, itemID, %vModifArticulo_codigo%, %vModifArticulo_id%
-	
+	ControlGetText, factNombreCompleto, %vModifArticulo_descripcion%, %vModifArticulo_id%
+	factNombreCompleto := Trim(factNombreCompleto)
+
 	if(newPrice == 0)
 	{
 		newPrice := Clipboard
@@ -514,7 +530,7 @@ PastePrice(newPrice := 0){
         MsgBox, Precio inválido. (%newPrice%)
         return
     }
-	
+
 	modificadorAdicionalString := ""
 	precioAdicionalString := ""
 	ApplyPriceMultipliers(newPrice, oldPrice, modificadorAdicionalString, precioAdicionalString)
@@ -529,16 +545,16 @@ PastePrice(newPrice := 0){
             return 0
         }
     }
-	
+
 	newPrice := Round(newPrice, 3) ;Lupa quiere 3 decimales.
-	
+
 	ControlFocus, %vModifArticulo_precioCosto%, %vModifArticulo_id%
 	WinActivate, %vModifArticulo_id% ;TODO
 	ControlSend, %vModifArticulo_precioCosto%, %newPrice%, %vModifArticulo_id%
-	
+
 	;Control, ChooseString, Dolares, %vModifArticulo_moneda%, %vModifArticulo_id%
-	
-	LogPriceChange(itemID, oldPrice, newPrice, modificadoresText, modificadorAdicionalString, precioAdicionalString)
+
+	LogPriceChange(itemID, oldPrice, newPrice, modificadoresText, modificadorAdicionalString, precioAdicionalString, factNombreCompleto)
 	lastPercent := percent
 	return true
 }
@@ -548,7 +564,7 @@ SetMargins(margin1, margin2, margin3, fast := false){
 	{
 		vModifArticulo_Abrir()
 	}
-	
+
 	ControlFocus, %vModifArticulo_margen1%, %vModifArticulo_id%
 	Send, %margin1%{Enter}
 	Sleep, 100
@@ -561,7 +577,7 @@ SetMargins(margin1, margin2, margin3, fast := false){
 	ControlFocus, ComboBox4, %vModifArticulo_id%
 	Control, ChooseString, VENTAS/COMPRAS, ComboBox4, %vModifArticulo_id%
 	;ControlSend, ComboBox4, {Enter}, %vModifArticulo_id%
-	
+
 	if(fast)
 	{
 		Sleep, 100
@@ -569,8 +585,8 @@ SetMargins(margin1, margin2, margin3, fast := false){
 		ControlClick, Ok, %vModifArticulo_id%,,,, NA
 		ProximoArticulo(false)
 	}
-	
-	
+
+
 	return true
 }
 
@@ -579,7 +595,7 @@ FastSetRubro(rubro){
 	{
 		vModifArticulo_Abrir()
 	}
-	
+
 	ControlFocus, %vModifArticulo_rubro%, %vModifArticulo_id%,,,, NA
 	Control, ChooseString, %rubro%, %vModifArticulo_rubro%, %vModifArticulo_id%
 	Sleep, 100
@@ -587,7 +603,7 @@ FastSetRubro(rubro){
 	ControlClick, Ok, %vModifArticulo_id%,,,, NA
 	Sleep, 200
 	ProximoArticulo(false)
-	
+
 	return true
 }
 ;}
@@ -599,12 +615,12 @@ ProximoArticulo(openAfter := true)
 	{
 		return
 	}
-		
+
 	if(WinExist(vModifArticulo_id))
 	{
 		vModifArticulo_Cerrar()
 	}
-	
+
 	ControlSend, %vReporteArticulos_planilla%, {Down}, %vReporteArticulos_id%
 	if(openAfter)
 	{
@@ -618,7 +634,7 @@ AnteriorArticulo(openAfter := true)
 	{
 		return
 	}
-		
+
 	if(WinExist(vModifArticulo_id))
 	{
 		vModifArticulo_Cerrar()
@@ -632,10 +648,10 @@ AnteriorArticulo(openAfter := true)
 ;}
 
 ;{ Logging
-LogPriceChange(itemID := "", oldPrice := "", newPrice = "", modificadores := "", modificadorAdicional := "", precioAdicional := ""){
+LogPriceChange(itemID := "", oldPrice := "", newPrice = "", modificadores := "", modificadorAdicional := "", precioAdicional := "", factNombreCompleto := ""){
     percent := (100*newPrice/oldPrice)-100
     percent := Round(percent, 1)
-    finalText = %itemID%: %percent%`% (%lastSeekCol%, %modificadores%%modificadorAdicional%%precioAdicional%, %oldPrice% -> %newPrice%)
+    finalText = %itemID% (%lastSearchedAlias%):	%percent%`% (%lastSeekCol%, %modificadores%%modificadorAdicional%%precioAdicional%, %oldPrice% -> %newPrice%) %factNombreCompleto%
     finalText = %finalText%`r`n ;concatenation
     LogSend(finalText)
 }
@@ -805,7 +821,7 @@ DeepCopyControl(controlName, windowName1, windowName2, blacklist := "")
 		SendRaw, % controlText
 		Sleep, 200
 		;Send, {Enter}
-		
+
 		;Control, EditPaste, %controlText%, %controlName%, %windowName2%
 		;ControlSend, %controlName%, %controlText%, %windowName2%
 		;ControlSend, %controlName%, %controlText%, %windowName2%
@@ -869,7 +885,7 @@ Calc_GetSelectedCoords()
 	oDesk := oSM.createInstance("com.sun.star.frame.Desktop")	; Create the first and most important service
 	Array := ComObjArray(VT_VARIANT:=12, 2)
 	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
-	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)  
+	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)
 	oSel := oDoc.getCurrentSelection
 	oCell := ""
 	if(oSel.getImplementationName == "ScCellObj"){
@@ -883,10 +899,10 @@ Calc_GetSelectedCoords()
 	}
 	else{
 		MsgBox % oSel.getImplementationName
-		return 
+		return
 	}
 	Col:=oCell.CellAddress.Column
-	Row:=oCell.CellAddress.Row 
+	Row:=oCell.CellAddress.Row
 	FinalStr := Col "-" Row
 	Return FinalStr
 }
@@ -897,7 +913,7 @@ Calc_IsInMergedCell()
 	oDesk := oSM.createInstance("com.sun.star.frame.Desktop")	; Create the first and most important service
 	Array := ComObjArray(VT_VARIANT:=12, 2)
 	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
-	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)  
+	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)
 	oSel := oDoc.getCurrentSelection
 	if(oSel.getImplementationName == "ScCellRangeObj"){
 		return true
@@ -910,7 +926,7 @@ Calc_IsInMergedCell()
 Calc_SeekInRow(theVal)
 {
 	oSM := ComObjCreate("com.sun.star.ServiceManager")			; This line is mandatory with AHK for OOo API
-	oDesk := oSM.createInstance("com.sun.star.frame.Desktop")	; Create the first and most important service	
+	oDesk := oSM.createInstance("com.sun.star.frame.Desktop")	; Create the first and most important service
 	Array := ComObjArray(VT_VARIANT:=12, 2)
 	Array[1] := MakePropertyValue(oSM, "Hidden", ComObject(0xB,true))
 	oDoc := oDesk.CurrentComponent("private:factory/scalc", "_blank", 0, Array)
@@ -920,7 +936,7 @@ Calc_SeekInRow(theVal)
 	oSel := oDoc.getCurrentSelection
 	oCell := ""
 	oActiveSheet := oDoc.getCurrentController().getActiveSheet()
-	
+
 	if(oSel.getImplementationName == "ScCellObj"){
 		oCell := oSel
 	}
@@ -932,15 +948,15 @@ Calc_SeekInRow(theVal)
 	}
 	else{
 		MsgBox % oSel.getImplementationName
-		return 
+		return
 	}
-	
+
 	closestNumbr := 0
 	searchResultRow := oCell.CellAddress.Row
 	searchResultCol := oCell.CellAddress.Column
 	candidateRow := searchResultRow
 	candidateCol := searchResultCol
-	
+
 	;Get the used range of the sheet, first, so we can use it as reference for what columns to evaluate.
 	oCursor := oActiveSheet.createCursor()
 	oCursor.gotoStartOfUsedArea(False)
@@ -953,7 +969,7 @@ Calc_SeekInRow(theVal)
 	;All together now!
 	rg := oActiveSheet.getCellRangeByPosition(oUsedRange.StartColumn, oMergedArea.StartRow, oUsedRange.EndColumn, oMergedArea.EndRow)
 	mData := rg.getDataArray()
-	
+
 	row_ := -1
 	while(row_ < mData.MaxIndex()){
 		row_++
@@ -997,7 +1013,7 @@ Calc_SeekInRow(theVal)
 	oCell := oActiveSheet.getCellByPosition(candidateCol,candidateRow)
 	oDoc.getCurrentController().Select(oCell)
 	oDoc.getCurrentController.Select(oDoc.createInstance("com.sun.star.sheet.SheetCellRanges")) ;Deselect
-	
+
 	return closestNumbr
 }
 
@@ -1099,14 +1115,14 @@ Launch_Media::
 ;FastCorrectNota("Monteluz")
 ;FastSetRubro("16")
 ;SetMargins("60", "25", "40", true)
-;Msgbox, Testing...	
+;Msgbox, Testing...
 ;FastAliasizeDesc()
 WinRestore, LUPA - Gest
 
 return
 
 !^Launch_Media::
-ListLines 
+ListLines
 return
 
 Volume_Up::
@@ -1180,16 +1196,16 @@ if WinExist(vFacturaProov_id)
 		ControlSend, Edit3, {Enter}, %primeraVentFact%
 		ControlGetText, factPrecioCosto, Edit4, %primeraVentFact%
 		ControlSend, Edit4, {Enter}, %primeraVentFact%
-		
+
 		WinWait, %vModifArticulo_id%
-		
+
 		ControlGetText, factNombreCompleto, %vModifArticulo_descripcion%, %vModifArticulo_id%
 		factNombreCompleto := Trim(factNombreCompleto)
 		factPrecioCosto := TextPrice2Float(factPrecioCosto)
 		ApplyPriceMultipliers(factPrecioCosto)
 		factPrecioCosto := RegExReplace(factPrecioCosto,"(\.\d*?)0*$","$1")
 		factPrecioCosto := RegExReplace(factPrecioCosto,"\.$")
-		
+
 		ControlClick, %vReporteArticulos_proovedoresHabituales%, %vModifArticulo_id%,,,, NA ;Clickea el boton Proveedores Habituales
 		WinWait, %vProovedoresHabituales_id%, , 5
 		if ErrorLevel {
@@ -1210,7 +1226,7 @@ if WinExist(vFacturaProov_id)
 		vModifArticulo_Cerrar()
 		ControlFocus, TWBROWSE1, %vFacturaProov_id%
 		ControlSend, TWBROWSE1, {PGDN}, %vFacturaProov_id%
-		
+
 		finalDetailText = %factCantidad% x %factCodigo% (%factAliasText%) - %factPrecioCosto% - %factNombreCompleto%`r`n
 		LogSend(finalDetailText)
 		Sleep, 200
