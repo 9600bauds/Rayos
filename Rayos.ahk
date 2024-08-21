@@ -459,6 +459,23 @@ TextPrice2Float(price){
 
 ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdicionalString := "", ByRef precioAdicionalString := ""){
 	ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
+	modificadorAdicionalString := ""
+    RegExMatch(notaAdicional, "im).*Precio de lista \*([0-9.]+)$", extraMults)
+    if(extraMults1)
+	{
+        modificadorAdicionalString := " *" . extraMults1
+        newPrice := newPrice * extraMults1
+    }
+    RegExMatch(notaAdicional, "im).*Precio de lista \/([0-9.]+)$", extraDivisions)
+    if(extraDivisions1)
+	{
+		modificadorAdicionalString := " /" . extraDivisions1
+        newPrice := newPrice / extraDivisions1
+    }
+
+	if(newPrice * 500 < oldPrice){ ;FUCK THOUSANDS SEPARATORS
+        newPrice := newPrice * 1000
+    }
 
 	RegExMatch(notaAdicional, "im).*Incluye (.*)$", preciosAdicionales)
 	if(preciosAdicionales1)
@@ -482,25 +499,7 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
 		newPrice := newPrice + precioAdicional
 	}
 
-	modificadorAdicionalString := ""
-    RegExMatch(notaAdicional, "im).*Precio de lista \*([0-9.]+)$", extraMults)
-    if(extraMults1)
-	{
-        modificadorAdicionalString := " *" . extraMults1
-        newPrice := newPrice * extraMults1
-    }
-    RegExMatch(notaAdicional, "im).*Precio de lista \/([0-9.]+)$", extraDivisions)
-    if(extraDivisions1)
-	{
-		modificadorAdicionalString := " /" . extraDivisions1
-        newPrice := newPrice / extraDivisions1
-    }
-
 	newPrice := newPrice * modificadoresMult
-
-	if(newPrice * 500 < oldPrice){ ;FUCK THOUSANDS SEPARATORS
-        newPrice := newPrice * 1000
-    }
 }
 
 PastePrice(newPrice := 0){
