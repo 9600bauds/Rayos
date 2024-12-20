@@ -473,9 +473,9 @@ ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdic
         newPrice := newPrice / extraDivisions1
     }
 
-	if(newPrice * 500 < oldPrice){ ;FUCK THOUSANDS SEPARATORS
-        newPrice := newPrice * 1000
-    }
+	;if(newPrice * 500 < oldPrice){ ;FUCK THOUSANDS SEPARATORS
+    ;    newPrice := newPrice * 1000
+    ;}
 
 	RegExMatch(notaAdicional, "im).*Incluye (.*)$", preciosAdicionales)
 	if(preciosAdicionales1)
@@ -1200,10 +1200,21 @@ if WinExist(vFacturaProov_id)
 
 		ControlGetText, factNombreCompleto, %vModifArticulo_descripcion%, %vModifArticulo_id%
 		factNombreCompleto := Trim(factNombreCompleto)
+
 		factPrecioCosto := TextPrice2Float(factPrecioCosto)
+
+		old_factPrecioCosto := factPrecioCosto
 		ApplyPriceMultipliers(factPrecioCosto)
+
+
+		factor := factPrecioCosto / old_factPrecioCosto
+		factPrecioCosto := (factPrecioCosto / factor) / factor ;todo is this correct?
+		factPrecioCosto := Round(factPrecioCosto, 3)
+
 		factPrecioCosto := RegExReplace(factPrecioCosto,"(\.\d*?)0*$","$1")
 		factPrecioCosto := RegExReplace(factPrecioCosto,"\.$")
+
+		factPrecioTotalEsteArticulo := Round(factPrecioCosto * factCantidad, 3)
 
 		ControlClick, %vReporteArticulos_proovedoresHabituales%, %vModifArticulo_id%,,,, NA ;Clickea el boton Proveedores Habituales
 		WinWait, %vProovedoresHabituales_id%, , 5
@@ -1226,7 +1237,7 @@ if WinExist(vFacturaProov_id)
 		ControlFocus, TWBROWSE1, %vFacturaProov_id%
 		ControlSend, TWBROWSE1, {PGDN}, %vFacturaProov_id%
 
-		finalDetailText = %factCantidad% x %factCodigo% (%factAliasText%) - %factPrecioCosto% - %factNombreCompleto%`r`n
+		finalDetailText = %factCantidad% x %factCodigo% (%factAliasText%) - %factPrecioCosto% (%factPrecioTotalEsteArticulo%) - %factNombreCompleto%`r`n
 		LogSend(finalDetailText)
 		Sleep, 200
 		ControlClick, Button5, %vFacturaProov_id%,,,, NA
@@ -1246,6 +1257,22 @@ return
 !^Launch_Mail::
 WinActivate, %vModifArticulo_id%
 WinActivate, %vNuevoArticulo_id%
+
+
+ControlGetText, precioActual, %vModifArticulo_precioCosto%, %vNuevoArticulo_id%
+ControlGetText, codigoActual, %vModifArticulo_codigo%, %vNuevoArticulo_id%
+if (Trim(codigoActual) = "") {
+	MsgBox, Ingrese primero el nuevo codigo.
+	return
+}
+
+if (Trim(precioActual) = "0.000")
+{
+    ControlFocus, %vModifArticulo_precioCosto%, %vNuevoArticulo_id%
+    ControlSend, %vModifArticulo_precioCosto%, 99999, %vNuevoArticulo_id%
+    ControlFocus
+}
+
 camposAClonar := [vModifArticulo_descripcion, vModifArticulo_puntoPedido, vModifArticulo_empaque, vModifArticulo_unidad, vModifArticulo_moneda, vModifArticulo_margen1, vModifArticulo_margen2, vModifArticulo_margen3, vModifArticulo_iva, vModifArticulo_rubro, vModifArticulo_nota]
 
 ;DeepCopyControl(vModifArticulo_precioCosto, vModifArticulo_id, vNuevoArticulo_id, ",")
@@ -1253,6 +1280,7 @@ for i, elCampo in camposAClonar
 {
 	DeepCopyControl(elCampo, vModifArticulo_id, vNuevoArticulo_id)
 }
+
 return
 
 Browser_Search::
