@@ -12,6 +12,7 @@ SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 
 ;{ Globals (most of these are effectively defines)
 
+global vLupaExe := "ahk_exe LUPA.exe"
 global vReporteArticulos_id := "Artículos de :"
 global vReporteArticulos_proovedoresHabituales := "Button18"
 
@@ -23,7 +24,7 @@ global vWord_id := " - Word"
 global vCalc_id := "OpenOffice Calc"
 global vCalc_buscar := "Find & Replace"
 global vCalc_main := "ahk_class SALFRAME" ;Precisamente la planilla principal, no ningún diálogo
-global vAdobe_id := "Adobe Acrobat"
+global vAdobe_id := "ahk_exe Acrobat.exe"
 global vAdobeBuscar_id := "Buscar ahk_exe Acrobat.exe"
 global vAdobeBuscar_ok := "Button18"
 global vAdobeBuscar_input := "Edit5"
@@ -442,18 +443,38 @@ OnSuccessfulSearch(){
 
 ;{ Precios
 TextPrice2Float(price){
+	;This program has, genuinely, the worst standard I have ever seen.
+	leadingSpacesCount := StrLen(price) - StrLen(LTrim(price))
+	totalStringLength := StrLen(price)
 	price := RegExReplace(price, "[^0-9.,]") ;Non-numbers begone. This includes you, whitespace. This includes you too, linebreaks.
 
-	if(RegExMatch(price, "\d+\.\d{3}\,\d+")){ ;Example: 11.517,12
-		price := RegExReplace(price, "\.") ;Remove separator dots
-		price := RegExReplace(price, "\,", ".") ;Commas to something that actually makes sense
-	}
-	else if(RegExMatch(price, "\d+\,\d{3}\.\d+")){ ;Example: 11,517.12
-		price := RegExReplace(price, "\,") ;Remove separator commas
-	}
-	else if(RegExMatch(price, "\d+\,\d+")){ ;Example: 11517,12
-		price := RegExReplace(price, "\,", ".") ;Commas to something that actually makes sense
-	}
+    ; Case 1: Both periods and commas present - rightmost is decimal.
+    if (RegExMatch(price, "\.(?=[^,]*\,)") || RegExMatch(price, "\,(?=[^\.]*\.)")) {
+        ; Determine which is the decimal separator and normalize
+        if (RegExMatch(price, "(\d+)\.(\d+)\,(\d+)")) { ; Period is thousands, comma is decimal
+            price := RegExReplace(price, "\.", "")
+            price := RegExReplace(price, ",", ".")
+        } else if (RegExMatch(price, "(\d+)\,(\d+)\.(\d+)")) { ; Comma is thousands, period is decimal
+            price := RegExReplace(price, ",", "")
+        }
+    }
+    ; Case 2: Two or more periods or commas - all are thousands separators
+    else if (RegExMatch(price, "[.,].*[.,]")) {
+        price := RegExReplace(price, "[.,]", "")
+    }
+    ; Case 3: Single period or comma
+	else if (RegExMatch(price, "[.,]")) {
+		suspectedLupaPrice := leadingSpacesCount >= 3 && (totalStringLength >= 11 && totalStringLength <= 13) ? true : false
+		if(suspectedLupaPrice){
+			price := RegExReplace(price, ",", ".") ;Assume it's the decimal
+		}
+		else if (RegExMatch(price, "^\d{1,3}[.,]\d{3}$")) { ; Exactly 3 digits after, at the end, AND 1-3 digits before, at the start
+		;if (RegExMatch(price, "[.,]\d{3}$")) { ; Exactly 3 digits after, at the end
+            price := RegExReplace(price, "[.,]", "") ;Assume it's a thousands separator
+        } else { ; Otherwise,
+            price := RegExReplace(price, ",", ".") ;Assume it's the decimal
+        }
+    }
 	return price
 }
 
