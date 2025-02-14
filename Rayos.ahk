@@ -465,11 +465,12 @@ TextPrice2Float(price){
     ; Case 3: Single period or comma
 	else if (RegExMatch(price, "[.,]")) {
 		suspectedLupaPrice := leadingSpacesCount >= 3 && (totalStringLength >= 11 && totalStringLength <= 13) ? true : false
-		if(suspectedLupaPrice){
-			price := RegExReplace(price, ",", ".") ;Assume it's the decimal
-		}
-		else if (RegExMatch(price, "^\d{1,3}[.,]\d{3}$")) { ; Exactly 3 digits after, at the end, AND 1-3 digits before, at the start
-		;if (RegExMatch(price, "[.,]\d{3}$")) { ; Exactly 3 digits after, at the end
+        if (RegExMatch(price, "^(0+)[.,]")) {
+            price := RegExReplace(price, ",", ".") ; If everything to the left of the symbol is 0, assume it's the decimal.
+		} else if(suspectedLupaPrice){
+			price := RegExReplace(price, ",", ".") ;Lupa is just special like that, assume it's the decimal
+		;} else if (RegExMatch(price, "[.,]\d{3}$")) { ; Exactly 3 digits after, at the end
+		} else if (RegExMatch(price, "^\d{1,3}[.,]\d{3}$")) { ; Exactly 3 digits after, at the end, AND 1-3 digits before, at the start
             price := RegExReplace(price, "[.,]", "") ;Assume it's a thousands separator
         } else { ; Otherwise,
             price := RegExReplace(price, ",", ".") ;Assume it's the decimal
