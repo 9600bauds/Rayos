@@ -482,13 +482,13 @@ TextPrice2Float(price){
 ApplyPriceMultipliers(ByRef newPrice, byRef oldPrice := 0, ByRef modificadorAdicionalString := "", ByRef precioAdicionalString := ""){
 	ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
 	modificadorAdicionalString := ""
-    RegExMatch(notaAdicional, "im).*Precio de lista \*([0-9.]+)$", extraMults)
+    RegExMatch(notaAdicional, "im).*Precio de lista \*\s?([0-9.]+)$", extraMults)
     if(extraMults1)
 	{
         modificadorAdicionalString := " *" . extraMults1
         newPrice := newPrice * extraMults1
     }
-    RegExMatch(notaAdicional, "im).*Precio de lista \/([0-9.]+)$", extraDivisions)
+    RegExMatch(notaAdicional, "im).*Precio de lista \/\s?([0-9.]+)$", extraDivisions)
     if(extraDivisions1)
 	{
 		modificadorAdicionalString := " /" . extraDivisions1
@@ -1262,7 +1262,7 @@ if WinExist(vFacturaProov_id)
 		finalDetailText = %factCantidad% x %factCodigo% (%factAliasText%) - %factPrecioCosto% (%factPrecioTotalEsteArticulo%) - %factNombreCompleto%`r`n
 		LogSend(finalDetailText)
 		Sleep, 200
-		ControlClick, Button5, %vFacturaProov_id%,,,, NA
+		ControlClick, Button3, %vFacturaProov_id%,,,, NA
 
 	}
 	return
