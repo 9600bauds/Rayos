@@ -7,7 +7,7 @@ toggleSearchType(name) {
 			break
         }
     }
-    
+
 	activeSearchTypesStr := ""
 	for index, searchType in searchTypes {
 		if (searchType.active)
@@ -15,7 +15,7 @@ toggleSearchType(name) {
 	}
 	; Write the active search types to the registry as REG_MULTI_SZ
 	RegWrite, REG_MULTI_SZ, HKEY_CURRENT_USER\SOFTWARE\Rayos, savedSearchTypes, %activeSearchTypesStr%
-	
+
 	refreshSearchTypeMenu()
 }
 
@@ -54,26 +54,10 @@ executeSearchTypes(alias) {
     return alias
 }
 
-
-doSearch_Exact(alias){
-    return "^ " . alias . "$"
+doSearch_BeforeFirstHyphen(alias) {
+    return RegExReplace(alias, "-.*", "")
 }
-createSearchType("Exact", "doSearch_Exact")
-
-doSearch_Start(alias){
-    return "^ " . alias
-}
-createSearchType("Start", "doSearch_Start")
-
-doSearch_End(alias){
-    return alias . "$"
-}
-createSearchType("End", "doSearch_End")
-
-doSearch_WordBoundaries(alias){
-    return "\b" . alias . "\b"
-}
-createSearchType("Word Boundaries", "doSearch_WordBoundaries")
+createSearchType("Before First Hyphen", "doSearch_BeforeFirstHyphen")
 
 doSearch_RemoveLastWord(alias){
     return RegExReplace(alias, " \w+$", "")
@@ -85,6 +69,12 @@ doSearch_RemoveColors(alias){
     return RegExReplace(alias, "\/$", "")
 }
 createSearchType("Remove Colors", "doSearch_RemoveColors")
+
+doSearch_RemoveColorsAtEnd(alias){
+    alias := RegExReplace(alias, "[A-Za-z]+$", "")
+    return RegExReplace(alias, "\/$", "")
+}
+createSearchType("Remove Colors At End", "doSearch_RemoveColorsAtEnd")
 
 doSearch_RemoveLetters(alias){
     return RegExReplace(alias, "[A-Za-z]", "")
@@ -134,7 +124,7 @@ doSearch_Ferrolux(alias){
     if WinExist(ventCalc)
     {
         return "^ " . newAlias
-    } 
+    }
     return newAlias
 }
 createSearchType("Ferrolux", "doSearch_Ferrolux")
@@ -148,3 +138,23 @@ doSearch_WhitespaceOptional(alias){
     return RegExReplace(alias, "\s+", "\s*")
 }
 createSearchType("Whitespace Optional", "doSearch_WhitespaceOptional")
+
+doSearch_Exact(alias){
+    return "^ " . alias . "$"
+}
+createSearchType("Exact", "doSearch_Exact")
+
+doSearch_Start(alias){
+    return "^ " . alias
+}
+createSearchType("Start", "doSearch_Start")
+
+doSearch_End(alias){
+    return alias . "$"
+}
+createSearchType("End", "doSearch_End")
+
+doSearch_WordBoundaries(alias){
+    return "\b" . alias . "\b"
+}
+createSearchType("Word Boundaries", "doSearch_WordBoundaries")

@@ -14,10 +14,12 @@ SetTitleMatchMode, 2 ; Match window titles anywhere, not just at the start.
 
 global vLupaExe := "ahk_exe LUPA.exe"
 global vReporteArticulos_id := "Artículos de :"
+;global vReporteArticulos_id := "TXBROWSE1"
+
 global vReporteArticulos_proovedoresHabituales := "Button18"
 
 global vReporteArticulos_planilla := "TXBROWSE1"
-global vReporteArticulos_modificar = "TBTNBMP57"
+global vReporteArticulos_modificar = "TBTNBMP59"
 
 global vNotepad_id := "ahk_class Notepad"
 global vWord_id := " - Word"
@@ -30,7 +32,8 @@ global vAdobeBuscar_ok := "Button18"
 global vAdobeBuscar_input := "Edit5"
 global vAdobeBuscar_resultados := "Static12"
 
-global vFacturaProov_id := "FACTURA  Proveedor.Nueva" ;sic
+global vFacturaProov_id := "FACTURA  Proveedor." ;sic
+global vFacturaProov_agregar := "Agregar"
 global vFacturaProovNuevo_id := "Nuevo"
 global vFacturaProovModif_id := "Modificación"
 
@@ -150,7 +153,12 @@ GetAlias(parseAfter := true, checkNota := true){
 					return
 				}
 			}
-			ControlGetText, aliasText, %vVerProovedorHabitual_alias%, %vVerProovedorHabitual_id%
+			ControlGetText, descText, %vVerProovedorHabitual_desc%, %vVerProovedorHabitual_id%
+			if (Trim(descText) != "")
+				aliasText := descText
+			else
+				ControlGetText, aliasText, %vVerProovedorHabitual_alias%, %vVerProovedorHabitual_id%
+			factAliasText := Trim(aliasText)
 
 			WinKill, %vVerProovedorHabitual_id%
 			ControlClick, Salir, %vVerProovedorHabitual_id%,,,, NA
@@ -158,19 +166,19 @@ GetAlias(parseAfter := true, checkNota := true){
 		}
 	}
 
-	if(checkNota)
-	{
-		if(not WinExist(vModifArticulo_id))
-		{
-			vModifArticulo_Abrir()
-		}
-		ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
-		RegExMatch(notaAdicional, "im).*(?:Alias completo|Alias|Simil):[ ]+(.*)$", aliasReplacement)
-		if(aliasReplacement1)
-		{
-			aliasText := aliasReplacement1
-		}
-	}
+	;if(checkNota)
+	;{
+	;	if(not WinExist(vModifArticulo_id))
+	;	{
+	;		vModifArticulo_Abrir()
+	;	}
+	;	ControlGetText, notaAdicional, %vModifArticulo_nota%, %vModifArticulo_id%
+	;	RegExMatch(notaAdicional, "im).*(?:Alias completo|Alias|Simil):[ ]+(.*)$", aliasReplacement)
+	;	if(aliasReplacement1)
+	;	{
+	;		aliasText := aliasReplacement1
+	;	}
+	;}
 
 	if(parseAfter){
 		aliasText := ParseAlias(aliasText)
@@ -471,7 +479,8 @@ TextPrice2Float(price){
 			price := RegExReplace(price, ",", ".") ;Lupa is just special like that, assume it's the decimal
 		;} else if (RegExMatch(price, "[.,]\d{3}$")) { ; Exactly 3 digits after, at the end
 		} else if (RegExMatch(price, "^\d{1,3}[.,]\d{3}$")) { ; Exactly 3 digits after, at the end, AND 1-3 digits before, at the start
-            price := RegExReplace(price, "[.,]", "") ;Assume it's a thousands separator
+            ;price := RegExReplace(price, ",", ".") ;Assume it's the decimal
+			price := RegExReplace(price, "[.,]", "") ;Assume it's a thousands separator
         } else { ; Otherwise,
             price := RegExReplace(price, ",", ".") ;Assume it's the decimal
         }
@@ -624,6 +633,89 @@ FastSetRubro(rubro){
 	ControlClick, Ok, %vModifArticulo_id%,,,, NA
 	Sleep, 200
 	ProximoArticulo(false)
+
+	return true
+}
+
+FastSetMoneda(moneda){
+	if(not WinExist(vModifArticulo_id))
+	{
+		vModifArticulo_Abrir()
+	}
+
+	ControlFocus, %vModifArticulo_moneda%, %vModifArticulo_id%,,,, NA
+	Control, ChooseString, %moneda%, %vModifArticulo_moneda%, %vModifArticulo_id%
+	Sleep, 100
+	ControlFocus, Ok, %vModifArticulo_id%,,,, NA
+	ControlClick, Ok, %vModifArticulo_id%,,,, NA
+	Sleep, 200
+	ProximoArticulo(false)
+
+	return true
+}
+
+
+FastSetNota(nota){
+	if(not WinExist(vModifArticulo_id))
+	{
+		vModifArticulo_Abrir()
+	}
+
+	ControlFocus, %vModifArticulo_nota%, %vModifArticulo_id%,,,, NA
+	ControlSetText, %vModifArticulo_nota%, % nota, %vModifArticulo_id%
+	Sleep, 200
+	ControlFocus, Ok, %vModifArticulo_id%,,,, NA
+	ControlClick, Ok, %vModifArticulo_id%,,,, NA
+	Sleep, 200
+	;ProximoArticulo(false)
+
+	return true
+}
+
+FastSetProov(proov){
+	ControlClick, TBTNBMP51, ahk_class TMDIFRAME,,,, NA ;Clickea el boton Proveedores Habituales
+	WinWait, %vProovedoresHabituales_id%, , 5
+	if ErrorLevel {
+		MsgBox, GetAlias - Could not rouse vProovedoresHabituales_id from the dead.
+		return
+	}
+
+	; --- Get and parse the window title ---
+	WinGetTitle, winTitle, %vProovedoresHabituales_id%
+	winTitle := Trim(winTitle)
+	StringSplit, titleWords, winTitle, %A_Space%
+	lastWord := titleWords%titleWords0%
+
+	; --- Prepend 0 if last word doesn't start with 0 ---
+	if (SubStr(lastWord, 1, 1) != "0") {
+		lastWord := "0" . lastWord
+	}
+
+	ControlClick, TBTNBMP11, %vProovedoresHabituales_id%,,,, NA
+	WinWait, %vNuevoProovedorHabitual_id%, , 5
+	if ErrorLevel
+	{
+		MsgBox, GetAlias - Could not summon vNuevoProovedorHabitual_id to this mortal coil.
+		return
+	}
+
+	SetEdit(vVerProovedorHabitual_numProovedor, vNuevoProovedorHabitual_id, proov)
+	ControlSend, %vVerProovedorHabitual_numProovedor%, {Enter}, %vNuevoProovedorHabitual_id%
+	Sleep, 50
+	SetEdit(vVerProovedorHabitual_alias, vNuevoProovedorHabitual_id, lastWord)
+	ControlSend, %vVerProovedorHabitual_alias%, {Enter}, %vNuevoProovedorHabitual_id%
+	Sleep, 50
+	ControlClick, Ok, %vNuevoProovedorHabitual_id%,,,, NA
+
+	;WinWaitClose, %vNuevoProovedorHabitual_id%
+
+	;WinKill, %vNuevoProovedorHabitual_id%
+	;ControlClick, Salir, %vNuevoProovedorHabitual_id%,,,, NA
+
+	;WinKill, %vProovedoresHabituales_id%
+	;WinWaitClose, %vProovedoresHabituales_id%
+
+	;Send, {Down}
 
 	return true
 }
@@ -1135,10 +1227,13 @@ if(savedModificadores or savedPostSearchString or savedSearchTypes or savedSuppr
 Launch_Media::
 ;FastCorrectNota("Monteluz")
 ;FastSetRubro("16")
-;SetMargins("60", "25", "40", true)
+;FastSetMoneda("Dolares")
+FastSetProov("49")
+;FastSetNota("Precio de Lista /50")
+;SetMargins("35", "25", "30", true)
 ;Msgbox, Testing...
 ;FastAliasizeDesc()
-WinRestore, LUPA - Gest
+;WinRestore, LUPA - Gest
 
 return
 
@@ -1251,8 +1346,14 @@ if WinExist(vFacturaProov_id)
 			MsgBox, GetAlias - Could not summon vVerProovedorHabitual_id to this mortal coil.
 			return
 		}
-		ControlGetText, factAliasText, %vVerProovedorHabitual_alias%, %vVerProovedorHabitual_id%
+
+		ControlGetText, descText, %vVerProovedorHabitual_desc%, %vVerProovedorHabitual_id%
+		if (Trim(descText) != "")
+			factAliasText := descText
+		else
+			ControlGetText, factAliasText, %vVerProovedorHabitual_alias%, %vVerProovedorHabitual_id%
 		factAliasText := Trim(factAliasText)
+
 		ControlClick, Salir, %vVerProovedorHabitual_id%,,,, NA
 		ControlSend,, {Esc}, %vProovedoresHabituales_id%
 		vModifArticulo_Cerrar()
@@ -1262,7 +1363,7 @@ if WinExist(vFacturaProov_id)
 		finalDetailText = %factCantidad% x %factCodigo% (%factAliasText%) - %factPrecioCosto% (%factPrecioTotalEsteArticulo%) - %factNombreCompleto%`r`n
 		LogSend(finalDetailText)
 		Sleep, 200
-		ControlClick, Button3, %vFacturaProov_id%,,,, NA
+		ControlClick, %vFacturaProov_agregar%, %vFacturaProov_id%,,,, NA
 
 	}
 	return
@@ -1295,7 +1396,7 @@ if (Trim(precioActual) = "0.000")
     ControlFocus
 }
 
-camposAClonar := [vModifArticulo_descripcion, vModifArticulo_puntoPedido, vModifArticulo_empaque, vModifArticulo_unidad, vModifArticulo_moneda, vModifArticulo_margen1, vModifArticulo_margen2, vModifArticulo_margen3, vModifArticulo_iva, vModifArticulo_rubro, vModifArticulo_nota]
+camposAClonar := [vModifArticulo_descripcion, vModifArticulo_moneda, vModifArticulo_margen1, vModifArticulo_margen2, vModifArticulo_margen3, vModifArticulo_iva, vModifArticulo_rubro]
 
 ;DeepCopyControl(vModifArticulo_precioCosto, vModifArticulo_id, vNuevoArticulo_id, ",")
 for i, elCampo in camposAClonar

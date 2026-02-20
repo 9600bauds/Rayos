@@ -22,26 +22,28 @@ global vModifArticulo_cancela := "Button20"
 vModifArticulo_Cerrar(){
 	if(!WinExist(vModifArticulo_id)){
 		return
-	}	
-		
+	}
+
 	ControlFocus, %vModifArticulo_cancela%, %vModifArticulo_id%,,,, NA
 	ControlClick, %vModifArticulo_cancela%, %vModifArticulo_id%,,,, NA
 	ControlSend, %vModifArticulo_cancela%, {Enter}, %vModifArticulo_id%
 	WinKill, %vModifArticulo_id%
-	WaitControlNotExist(vModifArticulo_cancela, vModifArticulo_id) 
+	WaitControlNotExist(vModifArticulo_cancela, vModifArticulo_id)
 }
 
 vModifArticulo_Abrir(){
 	if(WinExist(vModifArticulo_id)){
 		return
-	}	
+	}
 
 	Sleep, 200
-	
+
 	ControlFocus, %vReporteArticulos_modificar%, %vReporteArticulos_id%
 	Sleep, 200
 	ControlClick, %vReporteArticulos_modificar%, %vReporteArticulos_id%
-	;ControlSend, %vReporteArticulos_modificar%, ^M, %vReporteArticulos_id%
+	ControlSend, %vReporteArticulos_modificar%, ^M, %vReporteArticulos_id%
+	;Send, ^M
+
 	Loop{
 		if(A_Index = 350){
 			MsgBox, GetAlias - Could not get (551) vModifArticulo_id.
